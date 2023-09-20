@@ -4,12 +4,47 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty
 from kivy.config import Config
+# from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
+import os
+from plyer import filechooser
 Config.set('graphics', 'width', 500)
 Config.set('graphics', 'height', 300)
 
 import configparser
 
+class Archivo:
+    '''Para guardar ruta a archivo.
+    (Quiero que sea editable por el usuario y persistente)'''
+    def __init__(self) -> None:
+        '''Lee/Crea .cfg en dir trabajo.'''
+        self.config = configparser.ConfigParser()
+        self.wdir = os.getcwd()
+        self.NOMBRE = 'segpeso.cfg'
+        self.ruta_cfg = os.path.join(self.wdir, self.NOMBRE)
+
+        try:
+            self.config.read(self.NOMBRE)
+            self.ruta = self.config["RUTAS"]["xlsx"]
+        except:
+            self.config["RUTAS"] = {"xlsx": "0"}
+            with open(self.NOMBRE, 'w') as segpeso:
+                self.config.write(segpeso)
+            raise Exception("Sin archivo cfg, creado con valor nulo")
+        
+        print("Ruta a xlsx: ",self.ruta)
+
+    def guardar_ruta(self, nueva_ruta:str):
+        '''Guardar la ruta el .cfg
+        (llamar en método del botón)'''
+        self.config["RUTAS"] = {"xlsx": nueva_ruta}
+        with open(self.ruta_cfg, 'w') as segpeso:
+            self.config.write(segpeso)
+
 class PesoApp(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.segpeso_cfg = Archivo()
+    
     peso = ObjectProperty(None)
     medsomx = ObjectProperty(None)
     medsomn = ObjectProperty(None)
@@ -26,29 +61,14 @@ class PesoApp(BoxLayout):
     def limpiar(self):
         print("anda")
     def mod_rut(self):
-        print("anda")
+        print("Modificando ruta")
+        ruta_usr = filechooser.open_file(
+            title="Elegir ruta a archivo xlsx a crear..."
+            )[0]
+        self.segpeso_cfg.guardar_ruta(ruta_usr)
+        print("Ruta guardada en .cgf = ", ruta_usr)
     def abrir_xlsx(self):
         print("anda")
-
-class Archivo:
-    '''Para guardar ruta a archivo.
-    (Quiero que sea editable por el usuario y persistente)'''
-    def __init__(self) -> None:
-        self.config = configparser.ConfigParser()
-        try:
-            self.config.read('segpeso.cfg')
-            self.ruta = self.config["RUTAS"]["xlsx"]
-        except:
-            self.config["RUTAS"] = {"xlsx": "0"}
-            with open('segpeso.cfg', 'w') as segpeso:
-                self.config.write(segpeso)
-            raise Exception("Sin archivo cfg, creado con valor nulo")
-        
-        print("Ruta a xlsx: ",self.ruta)
-
-    def crear_archivo():
-        ...
-    
 
 
 class MainApp(App):
@@ -57,5 +77,4 @@ class MainApp(App):
         return PesoApp()
         
 if __name__ == '__main__':
-    #MainApp().run()
-    r = Archivo()
+    MainApp().run()
