@@ -12,8 +12,8 @@ Config.set('graphics', 'height', 300)
 
 import configparser
 
-class Archivo:
-    '''Para guardar ruta a archivo.
+class Archivos:
+    '''Para guardar ruta a   Archivos.
     (Quiero que sea editable por el usuario y persistente)'''
     def __init__(self) -> None:
         '''Lee/Crea .cfg en dir trabajo.'''
@@ -43,7 +43,7 @@ class Archivo:
 class PesoApp(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.segpeso_cfg = Archivo()
+        self.segpeso_cfg = Archivos()
     
     peso = ObjectProperty(None)
     medsomx = ObjectProperty(None)
