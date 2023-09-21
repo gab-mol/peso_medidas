@@ -90,7 +90,7 @@ class Crud():
     
     def baja():
         ...
-        
+
     def modificacion():
         ...
 
@@ -100,6 +100,7 @@ class PesoApp(BoxLayout):
         super().__init__(**kwargs)
         self.segpeso_cfg = Confg()
     
+    fecha = ObjectProperty(None)
     peso = ObjectProperty(None)
     medsomx = ObjectProperty(None)
     medsomn = ObjectProperty(None)

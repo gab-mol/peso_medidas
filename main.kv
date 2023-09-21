@@ -1,4 +1,5 @@
 <PesoApp>:
+    fecha: fecha
     peso: peso
     ruta: ruta
     medsomx: medsomx
@@ -24,10 +25,26 @@
                 size: self.size
                 pos: self.pos
         Label:
-            font_size: self.width/12
+            font_size: ((self.height + self.width)/2)/9
             markup: True
             color: (0,0,0)
             text: "[b]Guardar registro peso\n y medidas abdominales[/b]"
+        BoxLayout:
+            orientation: 'horizontal'
+            BoxLayout:
+                size_hint: .1, 1 
+            Label:
+                size_hint: .32, 1 
+                font_size: ((self.height + self.width)/2)/4
+                markup: True
+                color: (0,0,0)   
+                text: "\nFecha del  \nregistro: "
+            CenteredTextInput:
+                id: fecha
+                size_hint: .5, .6
+                multinline: False
+            BoxLayout:
+                size_hint: .08, 1 
         BoxLayout:
             orientation: 'horizontal'
             padding: [10,3,8,2]
