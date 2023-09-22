@@ -2,7 +2,7 @@ import kivy
 kivy.require('1.9.0')
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty, StringProperty
+from kivy.properties import NumericProperty, StringProperty
 from kivy.config import Config
 # from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
 
@@ -56,10 +56,11 @@ bd = SqliteDatabase(nombr_bd)
 class Bd(Model):
     class Meta():
         database = bd
+        db_table='Medidas'
 
 class Registro(Bd):
     '''Declaración de tabla'''
-    fecha = DateField()
+    fecha = DateField(primary_key=True)
     peso = FloatField()
     diametr_sob_ombl_mx = FloatField()
     diametr_sob_ombl_mn = FloatField()
@@ -85,7 +86,8 @@ class Crud():
     y a una base SQL (métodos CRUD).'''
     def __init__(self, fecha:str, peso:float, medsomx:float,
             medsomn:float, medbomx:float, medbomn:float) -> None:
-        
+        self.reg_bd = Registro()
+
         self.fecha = fecha
         self.peso = peso
         self.medsomx = medsomx
@@ -93,8 +95,16 @@ class Crud():
         self.medbomx = medbomx
         self.medbomn = medbomn
     
-    def alta():
-        ...
+    def alta(self):
+        self.reg_bd.fecha = self.fecha
+        self.reg_bd.peso = self.peso
+        self.reg_bd.diametr_sob_ombl_mx = self.medsomx
+        self.reg_bd.diametr_sob_ombl_mn = self.medsomn
+        self.reg_bd.diametr_baj_ombl_mx = self.medbomx
+        self.reg_bd.diametr_baj_ombl_mn = self.medbomn
+        self.reg_bd.save()
+
+        print("Guardado registro en SQL")
     
     def baja():
         ...
@@ -109,17 +119,23 @@ class PesoApp(BoxLayout):
     #  root.fechainput, vuelve como fechainput: fecha.text) *
     fechainput = StringProperty()
 
-    peso = ObjectProperty(None)
-    medsomx = ObjectProperty(None)
-    medsomn = ObjectProperty(None)
-    medbomx = ObjectProperty(None)
-    medbomn = ObjectProperty(None)
+    peso = NumericProperty()
+    medsomx = NumericProperty()
+    medsomn = NumericProperty()
+    medbomx = NumericProperty()
+    medbomn = NumericProperty()
 
     def __init__(self, **kwargs):
         '''root'''
         super().__init__(**kwargs)
         self.segpeso_cfg = Confg()
         self.fechainput = FECHA_SIS # * el valor defoult  
+
+        # arreglar incosistencia en uso de propiedades y tipos de datos
+        self.salida_datos = Crud(self.fechainput, 
+            self.peso, self.medsomx,
+            self.medsomn,self.medbomx,
+            self.medbomn)
 
     def guardar(self):
         print("fechainput ",self.fechainput)
@@ -128,10 +144,15 @@ class PesoApp(BoxLayout):
         print("medsomn ",self.medsomn.text)
         print("medbomx ",self.medbomx.text)
         print("medbomn ",self.medbomn.text)
+        self.salida_datos.alta()
+
         
+        
+
+
     def limpiar(self):
         print("anda")
-        
+
     def mod_rut(self):
         print("Modificando ruta")
         ruta_usr = filechooser.open_file(
