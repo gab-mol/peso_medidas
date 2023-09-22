@@ -2,10 +2,11 @@ import kivy
 kivy.require('1.9.0')
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty
 from kivy.config import Config
 # from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
 
+import time
 import os
 from plyer import filechooser
 
@@ -17,7 +18,7 @@ Config.set('graphics', 'height', 300)
 import configparser
 
 RUTA = os.getcwd()
-
+FECHA_SIS = time.strftime("%d/%m/%Y", time.localtime(time.time()))
 
 
 # Bases de datos y archivo de configuración
@@ -72,6 +73,13 @@ try:
 except:
     raise Exception("\nError de Conexión con bd SQL\n")
 
+
+class VerifCamp:
+    '''Verificación de campos.'''
+    def __init__(self) -> None:
+        ...
+
+
 class Crud():
     '''Registrar medidas: al Excel que venía usando,
     y a una base SQL (métodos CRUD).'''
@@ -96,26 +104,34 @@ class Crud():
 
 # Eventos bontones y declaración de app
 class PesoApp(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.segpeso_cfg = Confg()
-    
-    fecha = ObjectProperty(None)
+
+    # Esto es un enlace bidireccional (entra al .kv por 
+    #  root.fechainput, vuelve como fechainput: fecha.text) *
+    fechainput = StringProperty()
+
     peso = ObjectProperty(None)
     medsomx = ObjectProperty(None)
     medsomn = ObjectProperty(None)
     medbomx = ObjectProperty(None)
     medbomn = ObjectProperty(None)
 
+    def __init__(self, **kwargs):
+        '''root'''
+        super().__init__(**kwargs)
+        self.segpeso_cfg = Confg()
+        self.fechainput = FECHA_SIS # * el valor defoult  
+
     def guardar(self):
-        print(self.peso.text)
-        print(self.medsomx.text)
-        print(self.medsomn.text)
-        print(self.medbomx.text)
-        print(self.medbomn.text)
+        print("fechainput ",self.fechainput)
+        print("peso ",self.peso.text)
+        print("medsomx ",self.medsomx.text)
+        print("medsomn ",self.medsomn.text)
+        print("medbomx ",self.medbomx.text)
+        print("medbomn ",self.medbomn.text)
         
     def limpiar(self):
         print("anda")
+        
     def mod_rut(self):
         print("Modificando ruta")
         ruta_usr = filechooser.open_file(

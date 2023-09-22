@@ -1,5 +1,5 @@
 <PesoApp>:
-    fecha: fecha
+    fechainput: fecha.text
     peso: peso
     ruta: ruta
     medsomx: medsomx
@@ -35,14 +35,17 @@
                 size_hint: .1, 1 
             Label:
                 size_hint: .32, 1 
-                font_size: ((self.height + self.width)/2)/4
+                font_size: ((self.height + self.width)/2)/4.2
                 markup: True
                 color: (0,0,0)   
                 text: "\nFecha del  \nregistro: "
-            CenteredTextInput:
+            TextInput:
                 id: fecha
                 size_hint: .5, .6
-                multinline: False
+                padding: [10,10]
+                text: root.fechainput
+                font_size: ((self.height + self.width)/2)/4
+                multiline: False
             BoxLayout:
                 size_hint: .08, 1 
         BoxLayout:
