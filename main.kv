@@ -1,11 +1,11 @@
 <PesoApp>:
     fechainput: fecha.text
-    peso: peso.text
+    peso: peso
     ruta: ruta
-    medsomx: medsomx.text
-    medsomn: medsomn.text
-    medbomx: medbomx.text
-    medbomn: medbomn.text
+    medsomx: medsomx
+    medsomn: medsomn
+    medbomx: medbomx
+    medbomn: medbomn
 
     # spacing: 1
     padding: 5
@@ -160,4 +160,15 @@
 
 <CenteredTextInput@TextInput>:
     multiline: False
-    padding: [50, (self.height-self.line_height)/2]
+    padding: [25, (self.height-self.line_height)/2] # de stackoverflow. aparentemente es la mitad de la diferencia entre la linea de texto y el tamaño del widget..
+
+<MensErr>:
+    Label:
+        text: "Los campos vacíos dan error"
+        size_hint: 0.6, 0.2
+        pos_hint: {'x': 0.2,'top': 1}
+    Button:
+        text: "Cerrar aviso"
+        size_hint: 0.8, 0.2
+        pos_hint: {'x': 0.1,'top': 0.1}
+        on_press: root.dismiss()

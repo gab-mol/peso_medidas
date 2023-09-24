@@ -2,15 +2,18 @@ import kivy
 kivy.require('1.9.0')
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import NumericProperty, StringProperty
+from kivy.properties import StringProperty, ObjectProperty
 from kivy.config import Config
+from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.popup import Popup
 # from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
+
 
 import time
 import os
 from plyer import filechooser
 
-from peewee import  SqliteDatabase, Model, DateField, FloatField
+from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
 
 Config.set('graphics', 'width', 500)
 Config.set('graphics', 'height', 300)
@@ -20,6 +23,9 @@ import configparser
 RUTA = os.getcwd()
 FECHA_SIS = time.strftime("%d/%m/%Y", time.localtime(time.time()))
 
+def hora() -> str:
+    hora = time.strftime("%d/%m/%Y-%H:%M:%S", time.localtime(time.time()))
+    return hora
 
 # Bases de datos y archivo de configuración
 class Confg:
@@ -50,22 +56,22 @@ class Confg:
         with open(self.ruta_cfg, 'w') as segpeso:
             self.config.write(segpeso)
 
+
 ## Conexión con base de datos SQL (ORM)
 nombr_bd = "registro.db"
 bd = SqliteDatabase(nombr_bd)
-class Bd(Model):
+class Registro(Model):
+    fecha = DateField()
+    fecha_regist = CharField()
+    peso = FloatField(null = True)
+    diametr_sob_ombl_mx = FloatField(null = True)
+    diametr_sob_ombl_mn = FloatField(null = True)
+    diametr_baj_ombl_mx = FloatField(null = True)
+    diametr_baj_ombl_mn = FloatField(null = True)
     class Meta():
         database = bd
         db_table='Medidas'
-
-class Registro(Bd):
-    '''Declaración de tabla'''
-    fecha = DateField(primary_key=True)
-    peso = FloatField()
-    diametr_sob_ombl_mx = FloatField()
-    diametr_sob_ombl_mn = FloatField()
-    diametr_baj_ombl_mx = FloatField()
-    diametr_baj_ombl_mn = FloatField()
+        primary_key=CompositeKey('fecha', 'fecha_regist')
 
 try:
     bd.connect()
@@ -80,31 +86,40 @@ class VerifCamp:
     def __init__(self) -> None:
         ...
 
+class MensErr(FloatLayout):
+    def cerrar(self):
+        self.dismiss()
 
 class Crud():
     '''Registrar medidas: al Excel que venía usando,
     y a una base SQL (métodos CRUD).'''
-    def __init__(self, fecha:str, peso:float, medsomx:float,
-            medsomn:float, medbomx:float, medbomn:float) -> None:
-        self.reg_bd = Registro()
+    def __init__(self) -> None:
+        self.tb = Registro
 
-        self.fecha = fecha
-        self.peso = peso
-        self.medsomx = medsomx
-        self.medsomn = medsomn
-        self.medbomx = medbomx
-        self.medbomn = medbomn
-    
-    def alta(self):
-        self.reg_bd.fecha = self.fecha
-        self.reg_bd.peso = self.peso
-        self.reg_bd.diametr_sob_ombl_mx = self.medsomx
-        self.reg_bd.diametr_sob_ombl_mn = self.medsomn
-        self.reg_bd.diametr_baj_ombl_mx = self.medbomx
-        self.reg_bd.diametr_baj_ombl_mn = self.medbomn
-        self.reg_bd.save()
+    def alta(self, fecha, peso, medsomx, medsomn, medbomx, medbomn):
+        
+        datos = [peso.text, medsomx.text, medsomn.text, medbomx.text, medbomn.text]
+        
+        # introduce nulo (None) para salvar el error de coerción  
+        for i in range(len(datos)):
+            if datos[i]== '': 
+                datos[i] = None
+            else:
+                datos[i] = float(datos[i])
 
-        print("Guardado registro en SQL")
+        try:
+            self.tb.create(
+                    fecha = fecha,
+                    fecha_regist = hora(),
+                    peso = datos[0],
+                    diametr_sob_ombl_mx = datos[1],
+                    diametr_sob_ombl_mn = datos[2],
+                    diametr_baj_ombl_mx = datos[3],
+                    diametr_baj_ombl_mn = datos[4],
+            )
+            print("Guardado registro en SQL")
+        except:
+            raise Exception("ERROR al crear registro")
     
     def baja():
         ...
@@ -119,36 +134,24 @@ class PesoApp(BoxLayout):
     #  root.fechainput, vuelve como fechainput: fecha.text) *
     fechainput = StringProperty()
 
-    peso = NumericProperty()
-    medsomx = NumericProperty()
-    medsomn = NumericProperty()
-    medbomx = NumericProperty()
-    medbomn = NumericProperty()
+    peso = ObjectProperty(None)
+    medsomx = ObjectProperty(None)
+    medsomn = ObjectProperty(None)
+    medbomx = ObjectProperty(None)
+    medbomn = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         '''root'''
         super().__init__(**kwargs)
         self.segpeso_cfg = Confg()
         self.fechainput = FECHA_SIS # * el valor defoult  
-
-        # arreglar incosistencia en uso de propiedades y tipos de datos
-        self.salida_datos = Crud(self.fechainput, 
-            self.peso, self.medsomx,
-            self.medsomn,self.medbomx,
-            self.medbomn)
+        self.salida_datos = Crud()
 
     def guardar(self):
-        print("fechainput ",self.fechainput)
-        print("peso ",self.peso.text)
-        print("medsomx ",self.medsomx.text)
-        print("medsomn ",self.medsomn.text)
-        print("medbomx ",self.medbomx.text)
-        print("medbomn ",self.medbomn.text)
-        self.salida_datos.alta()
-
-        
-        
-
+        self.salida_datos.alta(self.fechainput, 
+            self.peso, self.medsomx,
+            self.medsomn, self.medbomx,
+            self.medbomn)
 
     def limpiar(self):
         print("anda")
@@ -160,6 +163,7 @@ class PesoApp(BoxLayout):
             )[0]
         self.segpeso_cfg.guardar_ruta(ruta_usr)
         print("Ruta guardada en .cgf = ", ruta_usr)
+        
     def abrir_xlsx(self):
         print("anda")
 
