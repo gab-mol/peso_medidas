@@ -7,6 +7,8 @@ from kivy.uix.popup import Popup
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
 
 # from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
 
@@ -90,25 +92,31 @@ except:
 
 class Verificar:
     '''Verificación de campos.'''
-    def __init__(self) -> None:
-        pass
+    def __init__(self, lista_datos:list[str]) -> None:
+        self.lista_datos = lista_datos
 
-    def formato(lista_datos):
+    def formato(self) -> list[bool]:
         '''Aviso emergente sobre caracteres no válidos y doble coma'''
-        for i in range(len(lista_datos)):
-            if re.search(r'[$%&"\'()a-zA-Z¡!¿?#\][/\\]', lista_datos[i]):
-                messagebox.showwarning("Advertencia", f"Valor no válido       \n\
-EN: {lista_datos[i]}")
-                
-        for dato in lista_datos:
+        l_e = []
+        for i in range(len(self.lista_datos)):
+            if re.search(r'[$%&"\'()a-zA-Z¡!¿?#\][/\\]', self.lista_datos[i]):
+                PesoApp.adv_emerg(error=f"Valor no válido       \n\
+# EN: {self.lista_datos[i]}") 
+                print(f"Valor no válido       \n # EN: {self.lista_datos[i]} (Verificar.formato)")
+            l_e.append(False) 
+        else:
+            l_e.append(True)
+        for dato in self.lista_datos:
             if dato.count(".") > 1 or dato.count(",") > 1:
-                messagebox.showwarning("Advertencia", f"Decimal no válido     \n\
+                PesoApp.adv_emerg(error=f"Decimal no válido     \n\
 EN: {dato}")
+                l_e[i] == False
+        return l_e
 
-    def decim_a_punt(lista_datos:list[str]):
+    def decim_a_punt(self) -> list[str]:
         '''Corregir marcador decimales.'''
         salida = []
-        for dato in lista_datos:
+        for dato in  self.lista_datos:
             if "," in dato:
                 dato_modificado = dato.replace(",", ".")
                 salida.append(dato_modificado)
@@ -117,14 +125,11 @@ EN: {dato}")
         return salida
 
 
-class MensErr(FloatLayout):
-    def __init__(self, *args, **kwargs):
+class MensErr(BoxLayout):
+    mens_err = StringProperty()
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
-        
-        
-    def cerrar(self):
-        self.dismis()
+        self.mens_err = kwargs["mens_err"]
 
 
 class Crud():
@@ -139,23 +144,22 @@ class Crud():
     def __init__(self) -> None:
         self.tb = Registro
 
-    def alta(self, fecha, peso, medsomx, medsomn, medbomx, medbomn):
-        datos = [peso.text, medsomx.text, medsomn.text, medbomx.text, medbomn.text]
+    def alta(self, fecha_s, datos_v):
+    #     datos = [peso.text, medsomx.text, medsomn.text, medbomx.text, medbomn.text]
+    #     print(datos)
+    #     # Verificar campos
+    #     Verificar.formato(datos)
+    #     datos_v = Verificar.decim_a_punt(datos)
         
-        # Verificar campos
-        Verificar.formato(datos)
-        datos_v = Verificar.decim_a_punt(datos)
-        
-        # introduce nulo (None) para salvar el error de coerción  
-        for i in range(len(datos_v)):
-            if datos_v[i]== '': 
-                datos_v[i] = None
-            else:
-                datos_v[i] = float(datos_v[i])
-
+    #     # introduce nulo (None) para salvar el error de coerción  
+    #     for i in range(len(datos_v)):
+    #         if datos_v[i]== '': 
+    #             datos_v[i] = None
+    #         else:
+    #             datos_v[i] = float(datos_v[i])
         try:
             self.tb.create(
-                    fecha = fecha,
+                    fecha = fecha_s,
                     fecha_regist = hora(),
                     peso = datos_v[0],
                     diametr_sob_ombl_mx = datos_v[1],
@@ -192,12 +196,36 @@ class PesoApp(BoxLayout):
         self.segpeso_cfg = Confg()
         self.fechainput = FECHA_SIS # * el valor defoult  
         self.salida_datos = Crud()
+        
 
     def guardar(self):
-        self.salida_datos.alta(self.fechainput, 
-            self.peso, self.medsomx,
-            self.medsomn, self.medbomx,
-            self.medbomn)
+
+        datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
+                 self.medbomx.text, self.medbomn.text]
+        print(datos)
+        # Verificar campos
+        verif_datos = Verificar(datos)
+        err_form = verif_datos.formato()
+        if False not in err_form:
+            datos_v = verif_datos.decim_a_punt()
+        
+            # introduce nulo (None) para salvar el error de coerción  
+            try:
+                for i in range(len(datos_v)):
+                    if datos_v[i]== '': 
+                        datos_v[i] = None
+                    else:
+                        datos_v[i] = float(datos_v[i])
+            except:
+                raise Exception("Imposible convertir a float")
+            
+            # Entrada a Crud.Alta:
+            try:
+                self.salida_datos.alta(self.fechainput, datos_v)
+            except:
+                raise Exception("Entrada con formato inválido")
+        else:
+            print("error")
 
     def limpiar(self):
         print("anda")
@@ -213,13 +241,25 @@ class PesoApp(BoxLayout):
     def abrir_xlsx(self):
         print("anda")
 
-    def adv_form_emerg(e):
-        aviso = Popup(title="Advertencia",
-            content=MensErr(error=e),
+    @classmethod
+    def adv_emerg(self, error):
+        print(error, "(dentro de adv_emerg)")
+        self.aviso = Popup(title="Advertencia",
+            content=MensErr(mens_err=error),
             size_hint=(None, None),
-            size=(500,500))
-            
-        aviso.open()
+            size=(300,300))
+        
+        self.aviso.open()
+
+    # Métodos AVISOS emergentes ####
+    @classmethod
+    def cerrar(self):
+        print("cierra emerg")
+        self.aviso.dismiss()
+
+
+
+
 
 class MainApp(App):
     title = "Seguimiento Peso"
