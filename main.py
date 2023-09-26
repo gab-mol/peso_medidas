@@ -92,31 +92,27 @@ except:
 
 class Verificar:
     '''Verificación de campos.'''
-    def __init__(self, lista_datos:list[str]) -> None:
-        self.lista_datos = lista_datos
+    def __init__(self) -> None:
+        #lista_datos = lista_datos
+        pass
 
-    def formato(self) -> list[bool]:
+    def formato(lista_datos:list[str]) -> list[bool]:
         '''Aviso emergente sobre caracteres no válidos y doble coma'''
-        l_e = []
-        for i in range(len(self.lista_datos)):
-            if re.search(r'[$%&"\'()a-zA-Z¡!¿?#\][/\\]', self.lista_datos[i]):
-                PesoApp.adv_emerg(error=f"Valor no válido       \n\
-# EN: {self.lista_datos[i]}") 
-                print(f"Valor no válido       \n # EN: {self.lista_datos[i]} (Verificar.formato)")
-            l_e.append(False) 
-        else:
-            l_e.append(True)
-        for dato in self.lista_datos:
-            if dato.count(".") > 1 or dato.count(",") > 1:
-                PesoApp.adv_emerg(error=f"Decimal no válido     \n\
-EN: {dato}")
-                l_e[i] == False
+        l_e = [True for _ in range(len(lista_datos))]
+        for i in range(len(lista_datos)):
+            if re.search(r'[$%&"\'()a-zA-Z¡!¿?#\][/\\]', lista_datos[i]):
+                print(f"Valor no válido       \n # EN: {lista_datos[i]} (Verificar.formato)")
+                l_e[i] = False 
+        for i in range(len(lista_datos)):
+            if lista_datos[i].count(".") > 1 or lista_datos[i].count(",") > 1:
+                print(lista_datos[i], "tiene +1 dec",  l_e[i])
+                l_e[i] = False
         return l_e
 
-    def decim_a_punt(self) -> list[str]:
+    def decim_a_punt(lista_datos:list[str]) -> list[str]:
         '''Corregir marcador decimales.'''
         salida = []
-        for dato in  self.lista_datos:
+        for dato in  lista_datos:
             if "," in dato:
                 dato_modificado = dato.replace(",", ".")
                 salida.append(dato_modificado)
@@ -204,10 +200,9 @@ class PesoApp(BoxLayout):
                  self.medbomx.text, self.medbomn.text]
         print(datos)
         # Verificar campos
-        verif_datos = Verificar(datos)
-        err_form = verif_datos.formato()
+        err_form = Verificar.formato(datos) 
         if False not in err_form:
-            datos_v = verif_datos.decim_a_punt()
+            datos_v = Verificar.decim_a_punt(datos)
         
             # introduce nulo (None) para salvar el error de coerción  
             try:
@@ -225,7 +220,12 @@ class PesoApp(BoxLayout):
             except:
                 raise Exception("Entrada con formato inválido")
         else:
-            print("error")
+            errores = []
+            print(err_form)
+            for i in range(len(err_form)):
+                if err_form[i] == False:
+                    errores.append(datos[i])
+            PesoApp.adv_emerg(error=f"Valor/es no válido/s: \n{errores}")
 
     def limpiar(self):
         print("anda")
