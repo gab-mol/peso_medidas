@@ -1,40 +1,40 @@
+# Dependencias Kivy:
 import kivy
 kivy.require('1.9.0')
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-# from kivy.uix.widget import Widget
+## from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+## from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
 
-# from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
+# Dependencias bases de datos:
+from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
+import openpyxl
 
-# Provisorio, previsto usar kivy para diseñar popupwindow
-import messagebox
-
+# Otras dependencias
 import time
 import os
 from plyer import filechooser
-
 import re
-from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
+import configparser
+
 
 Config.set('graphics', 'width', 500)
 Config.set('graphics', 'height', 300)
-
-import configparser
-
 RUTA = os.getcwd()
 FECHA_SIS = time.strftime("%d/%m/%Y", time.localtime(time.time()))
 
 def hora() -> str:
+    '''Para generar claves primarias.'''
     hora = time.strftime("%d/%m/%Y-%H:%M:%S", time.localtime(time.time()))
     return hora
 
-# Bases de datos y archivo de configuración
+# Archivo de configuración
 class Confg:
     '''Para guardar ruta a   Archivos.
     (Quiero que sea editable por el usuario y persistente)'''
@@ -47,23 +47,23 @@ class Confg:
 
         try:
             self.config.read(self.NOMBRE)
-            self.ruta = self.config["RUTAS"]["xlsx"]
+            self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
         except:
             self.config["RUTAS"] = {"xlsx": "0"}
             with open(self.NOMBRE, 'w') as segpeso:
                 self.config.write(segpeso)
             raise Exception("Sin archivo cfg, creado con valor nulo")
         
-        print("Ruta a xlsx: ",self.ruta)
+        print("Ruta a xlsx: ",self.ruta_xlsx)
 
     def guardar_ruta(self, nueva_ruta:str):
-        '''Guardar la ruta el .cfg
+        '''Guardar la ruta en .cfg
         (llamar en método del botón)'''
         self.config["RUTAS"] = {"xlsx": nueva_ruta}
         with open(self.ruta_cfg, 'w') as segpeso:
             self.config.write(segpeso)
 
-
+# Clases de conexión a bases ###############################
 ## Conexión con base de datos SQL (ORM)
 nombr_bd = "registro.db"
 bd = SqliteDatabase(nombr_bd)
@@ -87,7 +87,14 @@ try:
 except:
     raise Exception("\nError de Conexión con bd SQL\n")
 
+## Conexión con libro excel
+class LibroExcel():
+    '''Conexión con archivo excel'''
+    def __init__(self) -> None:
+        config = Confg()
+        self.ruta_xlsx = config.ruta_xlsx
 
+###############################
 
 
 class Verificar:
@@ -173,7 +180,7 @@ class Crud():
     def modificacion():
         ...
 
-# Eventos bontones y declaración de app
+# Eventos bontones y declaración de app ###############################
 class PesoApp(BoxLayout):
 
     # Esto es un enlace bidireccional (entra al .kv por 
@@ -268,14 +275,11 @@ class PesoApp(BoxLayout):
         self.aviso.dismiss()
 
 
-
-
-
 class MainApp(App):
     title = "Seguimiento Peso"
     def build(self):
         return PesoApp()
-        
-        
+
+
 if __name__ == '__main__':
     MainApp().run()
