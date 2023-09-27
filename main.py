@@ -199,9 +199,13 @@ class PesoApp(BoxLayout):
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
                  self.medbomx.text, self.medbomn.text]
         print(datos)
-        # Verificar campos
+        ## Verificar campos ##
         err_form = Verificar.formato(datos) 
+
+        # Si las entradas son válidas:
         if False not in err_form:
+
+            # Pasar todos las comas a puntos
             datos_v = Verificar.decim_a_punt(datos)
         
             # introduce nulo (None) para salvar el error de coerción  
@@ -214,18 +218,21 @@ class PesoApp(BoxLayout):
             except:
                 raise Exception("Imposible convertir a float")
             
-            # Entrada a Crud.Alta:
+            # >>> Entrada a Crud.Alta >>>
             try:
                 self.salida_datos.alta(self.fechainput, datos_v)
             except:
-                raise Exception("Entrada con formato inválido")
+                raise Exception("Error en alta de registro.")
+        
+        # Si hay entradas erroneas:
         else:
             errores = []
             print(err_form)
             for i in range(len(err_form)):
                 if err_form[i] == False:
                     errores.append(datos[i])
-            PesoApp.adv_emerg(error=f"Valor/es no válido/s: \n{errores}")
+            errores = '\n                 -> '.join(errores)
+            PesoApp.adv_emerg(error=f"Valor/es no válido/s:\n                 -> {errores}")
 
     def limpiar(self):
         print("anda")
@@ -241,19 +248,22 @@ class PesoApp(BoxLayout):
     def abrir_xlsx(self):
         print("anda")
 
+    # Métodos AVISO emergente ####
     @classmethod
     def adv_emerg(self, error):
+        '''Declaración y apertura de ventana de aviso emergente.'''
         print(error, "(dentro de adv_emerg)")
         self.aviso = Popup(title="Advertencia",
+            title_size=25,
             content=MensErr(mens_err=error),
             size_hint=(None, None),
             size=(300,300))
         
         self.aviso.open()
 
-    # Métodos AVISOS emergentes ####
     @classmethod
     def cerrar(self):
+        '''Evento de cierre para el botón del aviso emergente'''
         print("cierra emerg")
         self.aviso.dismiss()
 
