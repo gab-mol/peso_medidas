@@ -15,6 +15,7 @@ from kivy.uix.button import Button
 # Dependencias bases de datos:
 from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
 import openpyxl
+from openpyxl.worksheet.worksheet import Worksheet
 
 # Otras dependencias
 import time
@@ -48,6 +49,8 @@ class Confg:
         try:
             self.config.read(self.NOMBRE)
             self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
+            self.ruta_xlsx_pr = self.config["RUTAS"]["xlsx_pr"]
+            self.ARCH = self.config["NOMBRES"]["xlsx_pr"]
         except:
             self.config["RUTAS"] = {"xlsx": "0"}
             with open(self.NOMBRE, 'w') as segpeso:
@@ -88,11 +91,36 @@ except:
     raise Exception("\nError de Conexión con bd SQL\n")
 
 ## Conexión con libro excel
-class LibroExcel():
+class LibroExcel:
     '''Conexión con archivo excel'''
-    def __init__(self) -> None:
+    def __init__(self):
         config = Confg()
-        self.ruta_xlsx = config.ruta_xlsx
+        self.RUTA_XLSX = config.ruta_xlsx_pr
+        dir_cont = os.listdir(RUTA)
+        ARCH = config.ARCH
+        # Algoritmo para crear/leer condicionalmente el xlsx
+        if not ARCH in dir_cont:
+            print("Archivo excel faltante en directorio elegido.")
+            print("Creando... ", "\n\t", self.RUTA_XLSX,"\n")
+            self.libro = openpyxl.Workbook()
+            hoja = self.libro.active
+            hoja.title = "Tabla_medidas"
+            self.hoja = self.libro["Tabla_medidas"]
+            self.hoja.append(("fecha", "peso", "medsomx", "medsomn", "medbomx", "medbomn"))
+
+            self.libro.save(self.RUTA_XLSX)
+
+            self.libro = openpyxl.load_workbook(self.RUTA_XLSX)
+        else:
+            print("Cargando excel... : ", "\n\t", self.RUTA_XLSX,"\n")
+            self.libro = openpyxl.load_workbook(self.RUTA_XLSX)
+
+        self.hoja = self.libro["Tabla_medidas"]
+    
+    def ult_fila(self, hoja):
+        for i in range(1, hoja.max_column + 1): 
+            cell_obj = hoja.cell(row = hoja.max_row, column = i) 
+            print(cell_obj.value, end = " ")
 
 ###############################
 
@@ -146,20 +174,11 @@ class Crud():
     
     def __init__(self) -> None:
         self.tb = Registro
+        self.lib_excel = LibroExcel()
 
-    def alta(self, fecha_s, datos_v):
-    #     datos = [peso.text, medsomx.text, medsomn.text, medbomx.text, medbomn.text]
-    #     print(datos)
-    #     # Verificar campos
-    #     Verificar.formato(datos)
-    #     datos_v = Verificar.decim_a_punt(datos)
-        
-    #     # introduce nulo (None) para salvar el error de coerción  
-    #     for i in range(len(datos_v)):
-    #         if datos_v[i]== '': 
-    #             datos_v[i] = None
-    #         else:
-    #             datos_v[i] = float(datos_v[i])
+    def alta(self, fecha_s:str, datos_v:list):
+
+        # ALTA en SQL
         try:
             self.tb.create(
                     fecha = fecha_s,
@@ -174,6 +193,16 @@ class Crud():
         except:
             raise Exception("ERROR al crear registro")
     
+        # ALTA en Excel
+        try:
+            regis_exc = tuple([fecha_s] + datos_v)
+            print(regis_exc)
+
+            self.lib_excel.hoja.append(regis_exc)
+            
+            self.lib_excel.save(self.lib_excel.RUTA_XLSX)
+        except:
+            ...
     def baja():
         ...
 
