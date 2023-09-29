@@ -95,7 +95,7 @@ class LibroExcel:
     '''Conexión con archivo excel'''
     def __init__(self):
         config = Confg()
-        self.RUTA_XLSX = config.ruta_xlsx_pr
+        self.RUTA_XLSX = os.path.join(config.ruta_xlsx_pr, config.ARCH) 
         dir_cont = os.listdir(RUTA)
         ARCH = config.ARCH
         # Algoritmo para crear/leer condicionalmente el xlsx
@@ -200,9 +200,9 @@ class Crud():
 
             self.lib_excel.hoja.append(regis_exc)
             
-            self.lib_excel.save(self.lib_excel.RUTA_XLSX)
+            self.lib_excel.libro.save(self.lib_excel.RUTA_XLSX)
         except:
-            ...
+            raise Exception("Excel: Error de guardado")
     def baja():
         ...
 
