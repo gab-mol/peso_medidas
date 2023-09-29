@@ -1,7 +1,7 @@
 <PesoApp>:
     fechainput: fecha.text
     peso: peso
-    ruta: ruta
+    rutaxlsx: ruta.text
     medsomx: medsomx
     medsomn: medsomn
     medbomx: medbomx
@@ -38,6 +38,7 @@
                 font_size: ((self.height + self.width)/2)/4.2
                 markup: True
                 color: (0,0,0)   
+                padding: [30, (self.height-self.line_height)/2]
                 text: "\nFecha del  \nregistro: "
             TextInput:
                 id: fecha
@@ -53,19 +54,21 @@
             padding: [10,3,8,2]
             spacing: .5
             BoxLayout:
-                size_hint: .05,.8
+                size_hint: .01,.8
             Label:
-                size_hint: .35,.8
+                size_hint: .28,.8
                 font_size: ((self.height + self.width)/2)/4.5
                 color: (0,0,0)
                 markup: True
                 text: "[b]   Ruta a\n  archivo:[/b]"
             TextInput:
                 id: ruta
-                size_hint: .57,.8
+                size_hint: .70,.8
+                font_size: ((self.height + self.width)/2)/14
                 multinline: True
+                text: root.rutaxlsx
             BoxLayout:
-                size_hint: .03,.8
+                size_hint: .01,.8
         BoxLayout:
             orientation: 'horizontal'
             padding: 3
@@ -79,13 +82,13 @@
                 font_size: ((self.height + self.width)/2)/5
                 on_press: root.limpiar()
             Button:
-                text: "Modif.\n ruta"
-                font_size: ((self.height + self.width)/2)/5
-                on_press: root.mod_rut()
-            Button:
                 text: "Abrir\n xlsx"
                 font_size: ((self.height + self.width)/2)/5
                 on_press: root.abrir_xlsx()
+            Button:
+                text: "   Otras\nopciones"
+                font_size: ((self.height + self.width)/2)/5
+                on_press: root.mas()
 
     GridLayout:
         cols: 2
@@ -161,6 +164,7 @@
 <CenteredTextInput@TextInput>:
     multiline: False
     padding: [25, (self.height-self.line_height)/2] # de stackoverflow. aparentemente es la mitad de la diferencia entre la linea de texto y el tamaño del widget..
+    font_size: ((self.height + self.width)/2)/4
 
 <MensErr>:
     BoxLayout:

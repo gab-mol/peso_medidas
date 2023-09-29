@@ -25,8 +25,8 @@ import re
 import configparser
 
 
-Config.set('graphics', 'width', 500)
-Config.set('graphics', 'height', 300)
+Config.set('graphics', 'width', 700)
+Config.set('graphics', 'height', 350)
 RUTA = os.getcwd()
 FECHA_SIS = time.strftime("%d/%m/%Y", time.localtime(time.time()))
 
@@ -215,6 +215,7 @@ class PesoApp(BoxLayout):
     # Esto es un enlace bidireccional (entra al .kv por 
     #  root.fechainput, vuelve como fechainput: fecha.text) *
     fechainput = StringProperty()
+    rutaxlsx = StringProperty()
 
     peso = ObjectProperty(None)
     medsomx = ObjectProperty(None)
@@ -228,7 +229,7 @@ class PesoApp(BoxLayout):
         self.segpeso_cfg = Confg()
         self.fechainput = FECHA_SIS # * el valor defoult  
         self.salida_datos = Crud()
-        
+        self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
 
     def guardar(self):
 
@@ -273,7 +274,7 @@ class PesoApp(BoxLayout):
     def limpiar(self):
         print("anda")
 
-    def mod_rut(self):
+    def mas(self):
         print("Modificando ruta")
         ruta_usr = filechooser.open_file(
             title="Elegir ruta a archivo xlsx a crear..."
