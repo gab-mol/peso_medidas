@@ -16,6 +16,7 @@ from kivy.uix.button import Button
 from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
 import openpyxl
 from openpyxl.worksheet.worksheet import Worksheet
+# import xlwings as xw
 
 # Otras dependencias
 import time
@@ -23,7 +24,7 @@ import os
 from plyer import filechooser
 import re
 import configparser
-
+import threading
 
 Config.set('graphics', 'width', 700)
 Config.set('graphics', 'height', 350)
@@ -47,16 +48,31 @@ class Confg:
         self.ruta_cfg = os.path.join(self.wdir, self.NOMBRE)
 
         try:
-            self.config.read(self.NOMBRE)
-            self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
-            self.ruta_xlsx_pr = self.config["RUTAS"]["xlsx_pr"]
-            self.ARCH = self.config["NOMBRES"]["xlsx_pr"]
+            def cargar_conf(self):
+                self.config.read(self.NOMBRE)
+                self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
+                #self.ARCH = self.config["NOMBRES"]["xlsx"]
+                self.SIS = self.config["OPCIONES"]["sistema"]
+
+                # "xlsx_pr"  es para el desarrollo !!!!
+                self.ruta_xlsx_pr = self.config["RUTAS"]["xlsx_pr"]
+                self.ARCH = self.config["NOMBRES"]["xlsx_pr"]
+            cargar_conf(self)
         except:
-            self.config["RUTAS"] = {"xlsx": "0"}
+            self.config["NOMBRES"] = {"xlsx": "registro_medidas.xlsx",
+                "xlsx_pr": "prueba.xlsx", "bd_sql":"registro.db"}
+            # Directorio de ejecución por defercto
+            self.config["RUTAS"] = {"xlsx": f"{RUTA}",
+                "bd_sql":f"{RUTA}"}
+
+            # Windows por defecto
+            self.config["OPCIONES"] = {"sistema":"windows"}
+
             with open(self.NOMBRE, 'w') as segpeso:
                 self.config.write(segpeso)
             raise Exception("Sin archivo cfg, creado con valor nulo")
-        
+        finally:
+            cargar_conf(self)
         print("Ruta a xlsx: ",self.ruta_xlsx)
 
     def guardar_ruta(self, nueva_ruta:str):
@@ -227,9 +243,11 @@ class PesoApp(BoxLayout):
         '''root'''
         super().__init__(**kwargs)
         self.segpeso_cfg = Confg()
+        self.sistem = self.segpeso_cfg.SIS
         self.fechainput = FECHA_SIS # * el valor defoult  
         self.salida_datos = Crud()
         self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
+        self.nom_xlsx = self.segpeso_cfg.ARCH
 
     def guardar(self):
 
@@ -272,18 +290,31 @@ class PesoApp(BoxLayout):
             PesoApp.adv_emerg(error=f"Valor/es no válido/s:\n                 -> {errores}")
 
     def limpiar(self):
-        print("anda")
+        print("Próximamente...")
 
     def mas(self):
-        print("Modificando ruta")
+        print("Próximamente...")
+        '''print("Modificando ruta")
         ruta_usr = filechooser.open_file(
             title="Elegir ruta a archivo xlsx a crear..."
             )[0]
         self.segpeso_cfg.guardar_ruta(ruta_usr)
-        print("Ruta guardada en .cgf = ", ruta_usr)
-        
+        print("Ruta guardada en .cgf = ", ruta_usr)'''
+    
+    def comando_cmd(self):
+            '''Comando de apertura para el shell del os'''
+            if self.sistem == "windows":
+                rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
+                print(rut_compl)
+                os.system(f'cmd /k start excel.exe {rut_compl}')
+            else:
+                print("comando linux")
+
     def abrir_xlsx(self):
-        print("anda")
+        '''Lanzar app excel/equivalente en hilo.'''
+        t = threading.Thread(target=self.comando_cmd)
+        t.daemon = True
+        t.start()
 
     # Métodos AVISO emergente ####
     @classmethod
