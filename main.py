@@ -62,7 +62,7 @@ class Confg:
             self.config["NOMBRES"] = {"xlsx": "registro_medidas.xlsx",
                 "xlsx_pr": "prueba.xlsx", "bd_sql":"registro.db"}
             # Directorio de ejecución por defercto
-            self.config["RUTAS"] = {"xlsx": f"{RUTA}",
+            self.config["RUTAS"] = {"xlsx": f"{RUTA}", "xlsx_pr": f"{RUTA}", 
                 "bd_sql":f"{RUTA}"}
 
             # Windows por defecto
@@ -70,7 +70,8 @@ class Confg:
 
             with open(self.NOMBRE, 'w') as segpeso:
                 self.config.write(segpeso)
-            raise Exception("Sin archivo cfg, creado con valor nulo")
+            #raise Exception("Sin archivo cfg, creado con valor nulo")
+            print("Sin archivo cfg, creado con valor nulo")
         finally:
             cargar_conf(self)
         print("Ruta a xlsx: ",self.ruta_xlsx)
@@ -303,12 +304,18 @@ class PesoApp(BoxLayout):
     
     def comando_cmd(self):
             '''Comando de apertura para el shell del os'''
+            print(self.sistem)
             if self.sistem == "windows":
                 rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
                 print(rut_compl)
                 os.system(f'cmd /k start excel.exe {rut_compl}')
+            elif self.sistem == "linux":
+                rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
+                print(rut_compl)
+                os.system(f'libreoffice {rut_compl}')            
             else:
-                print("comando linux")
+                raise Exception("Abrir excel: sin comando válido")
+                
 
     def abrir_xlsx(self):
         '''Lanzar app excel/equivalente en hilo.'''
