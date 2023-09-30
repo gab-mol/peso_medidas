@@ -78,9 +78,9 @@
                 font_size: ((self.height + self.width)/2)/5
                 on_press: root.guardar()
             Button:
-                text: "Limpiar"
+                text: "Configurar"
                 font_size: ((self.height + self.width)/2)/5
-                on_press: root.limpiar()
+                on_press: root.configurar()
             Button:
                 text: "Abrir\n xlsx"
                 font_size: ((self.height + self.width)/2)/5
@@ -177,4 +177,32 @@
         Button:
             text: "Cerrar aviso"
             size_hint: 1, 0.4
-            on_press: app.root.cerrar()
+            on_press: app.root.cerrar_adv_emerg()
+
+<ConfEmerg>:
+    BoxLayout:
+        orientation: 'horizontal'
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
+                text: "Ruta bd"
+                font_size: 15
+                size_hint: 1, 1
+            Label:
+                text: "Ruta xlsx"
+                font_size: 15
+                size_hint: 1, 1
+            Label:
+                text: "Ruta x"
+                font_size: 15
+                size_hint: 1, 1
+        BoxLayout:
+            orientation: 'vertical'
+            Button:
+                size_hint: 1, 1
+                text: "b1"
+                on_press: root.b1()
+            Button:
+                size_hint: 1, 1
+            Button:
+                size_hint: 1, 1

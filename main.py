@@ -21,6 +21,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 # Otras dependencias
 import time
 import os
+from platform import system
 from plyer import filechooser
 import re
 import configparser
@@ -65,8 +66,8 @@ class Confg:
             self.config["RUTAS"] = {"xlsx": f"{RUTA}", "xlsx_pr": f"{RUTA}", 
                 "bd_sql":f"{RUTA}"}
 
-            # Windows por defecto
-            self.config["OPCIONES"] = {"sistema":"windows"}
+            # Detección de OS con platform
+            self.config["OPCIONES"] = {"sistema":system()}
 
             with open(self.NOMBRE, 'w') as segpeso:
                 self.config.write(segpeso)
@@ -173,6 +174,13 @@ class Verificar:
         return salida
 
 
+class ConfEmerg(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+    def b1(self):
+        print("b1 press")
+
 class MensErr(BoxLayout):
     mens_err = StringProperty()
     def __init__(self, **kwargs):
@@ -195,7 +203,7 @@ class Crud():
 
     def alta(self, fecha_s:str, datos_v:list):
 
-        # ALTA en SQL
+        # ALTA en SQLite
         try:
             self.tb.create(
                     fecha = fecha_s,
@@ -226,6 +234,7 @@ class Crud():
     def modificacion():
         ...
 
+
 # Eventos bontones y declaración de app ###############################
 class PesoApp(BoxLayout):
 
@@ -251,7 +260,6 @@ class PesoApp(BoxLayout):
         self.nom_xlsx = self.segpeso_cfg.ARCH
 
     def guardar(self):
-
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
                  self.medbomx.text, self.medbomn.text]
         print(datos)
@@ -290,9 +298,6 @@ class PesoApp(BoxLayout):
             errores = '\n                 -> '.join(errores)
             PesoApp.adv_emerg(error=f"Valor/es no válido/s:\n                 -> {errores}")
 
-    def limpiar(self):
-        print("Próximamente...")
-
     def mas(self):
         print("Próximamente...")
         '''print("Modificando ruta")
@@ -305,17 +310,16 @@ class PesoApp(BoxLayout):
     def comando_cmd(self):
             '''Comando de apertura para el shell del os'''
             print(self.sistem)
-            if self.sistem == "windows":
+            if self.sistem == "Windows":
                 rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
                 print(rut_compl)
                 os.system(f'cmd /k start excel.exe {rut_compl}')
-            elif self.sistem == "linux":
+            elif self.sistem == "Linux":
                 rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
                 print(rut_compl)
                 os.system(f'libreoffice {rut_compl}')            
             else:
                 raise Exception("Abrir excel: sin comando válido")
-                
 
     def abrir_xlsx(self):
         '''Lanzar app excel/equivalente en hilo.'''
@@ -323,7 +327,7 @@ class PesoApp(BoxLayout):
         t.daemon = True
         t.start()
 
-    # Métodos AVISO emergente ####
+    # Métodos Ventanas emergentes ####
     @classmethod
     def adv_emerg(self, error):
         '''Declaración y apertura de ventana de aviso emergente.'''
@@ -337,7 +341,25 @@ class PesoApp(BoxLayout):
         self.aviso.open()
 
     @classmethod
-    def cerrar(self):
+    def cerrar_adv_emerg(self):
+        '''Evento de cierre para el botón del aviso emergente'''
+        print("cierra emerg")
+        self.aviso.dismiss()
+
+    @classmethod
+    def configurar(self):
+        '''Declaración y apertura de ventana de configuración.'''
+        print("Abrir ")
+        self.aviso = Popup(title="Configuración",
+            title_size=25,
+            content=ConfEmerg(),
+            size_hint=(None, None),
+            size=(300,300))
+        
+        self.aviso.open()
+
+    @classmethod
+    def cerrar_configurar(self):
         '''Evento de cierre para el botón del aviso emergente'''
         print("cierra emerg")
         self.aviso.dismiss()
