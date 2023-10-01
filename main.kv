@@ -180,6 +180,7 @@
             on_press: app.root.cerrar_adv_emerg()
 
 <ConfEmerg>:
+    orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
         BoxLayout:
@@ -206,3 +207,31 @@
                 size_hint: 1, 1
             Button:
                 size_hint: 1, 1
+    BoxLayout:
+        size_hint: 1, 0.3
+        padding: 8
+        BoxLayout:
+        Button:
+            text: "Cerrar"
+            font_size: 20
+            size_hint: 0.7, 1
+            on_press: app.root.cerrar_configurar()
+        BoxLayout:
+
+<Dialog>:
+    orientation: 'vertical'
+    Label:
+        text: root.mensaje
+        font_size: 15
+        size_hint: 1, 1
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: 10
+        Button:
+            text: root.si
+            size_hint: 1, 0.6
+            on_press: app.root.a_conf()
+        Button:
+            text: root.no
+            size_hint: 1, 0.6
+            on_press: app.root.cerrar_dialog()

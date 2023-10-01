@@ -22,7 +22,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 import time
 import os
 from platform import system
-from plyer import filechooser
+from plyer.facades import FileChooser
 import re
 import configparser
 import threading
@@ -39,43 +39,50 @@ def hora() -> str:
 
 # Archivo de configuración
 class Confg:
-    '''Para guardar ruta a   Archivos.
-    (Quiero que sea editable por el usuario y persistente)'''
+    '''Rutas a bases de datos.'''
+    
+    NOMBRE = 'segpeso.cfg'
+    config = configparser.ConfigParser()
+    wdir = RUTA
+    ruta_cfg = os.path.join(wdir, NOMBRE)
+    
     def __init__(self) -> None:
         '''Lee/Crea .cfg en dir trabajo.'''
-        self.config = configparser.ConfigParser()
-        self.wdir = RUTA
-        self.NOMBRE = 'segpeso.cfg'
-        self.ruta_cfg = os.path.join(self.wdir, self.NOMBRE)
 
-        try:
-            def cargar_conf(self):
-                self.config.read(self.NOMBRE)
-                self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
-                #self.ARCH = self.config["NOMBRES"]["xlsx"]
-                self.SIS = self.config["OPCIONES"]["sistema"]
-
-                # "xlsx_pr"  es para el desarrollo !!!!
-                self.ruta_xlsx_pr = self.config["RUTAS"]["xlsx_pr"]
-                self.ARCH = self.config["NOMBRES"]["xlsx_pr"]
-            cargar_conf(self)
+        try:        
+            Confg.cargar_conf()
         except:
-            self.config["NOMBRES"] = {"xlsx": "registro_medidas.xlsx",
-                "xlsx_pr": "prueba.xlsx", "bd_sql":"registro.db"}
-            # Directorio de ejecución por defercto
-            self.config["RUTAS"] = {"xlsx": f"{RUTA}", "xlsx_pr": f"{RUTA}", 
-                "bd_sql":f"{RUTA}"}
-
-            # Detección de OS con platform
-            self.config["OPCIONES"] = {"sistema":system()}
-
-            with open(self.NOMBRE, 'w') as segpeso:
-                self.config.write(segpeso)
-            #raise Exception("Sin archivo cfg, creado con valor nulo")
-            print("Sin archivo cfg, creado con valor nulo")
+            PesoApp.a_conf()
         finally:
-            cargar_conf(self)
-        print("Ruta a xlsx: ",self.ruta_xlsx)
+            Confg.cargar_conf()
+            print("Ruta a xlsx: ",self.ruta_xlsx)
+        
+    @classmethod
+    def cargar_conf(self):
+        self.config.read(self.NOMBRE)
+        self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
+        #self.ARCH = self.config["NOMBRES"]["xlsx"]
+        self.SIS = self.config["OPCIONES"]["sistema"]
+
+        # "xlsx_pr"  es para el desarrollo !!!!
+        self.ruta_xlsx_pr = self.config["RUTAS"]["xlsx_pr"]
+        self.ARCH = self.config["NOMBRES"]["xlsx_pr"]
+    
+    @classmethod
+    def cfg_defoult(self):    
+        self.config["NOMBRES"] = {"xlsx": "registro_medidas.xlsx",
+            "xlsx_pr": "prueba.xlsx", "bd_sql":"registro.db"}
+        # Directorio de ejecución por defercto
+        self.config["RUTAS"] = {"xlsx": f"{RUTA}", "xlsx_pr": f"{RUTA}", 
+            "bd_sql":f"{RUTA}"}
+
+        # Detección de OS con platform
+        self.config["OPCIONES"] = {"sistema":system()}
+
+        with open(Confg.NOMBRE, 'w') as segpeso:
+            self.config.write(segpeso)
+        #raise Exception("Sin archivo cfg, creado con valor nulo")
+        print("Sin archivo cfg, creado con valor nulo")
 
     def guardar_ruta(self, nueva_ruta:str):
         '''Guardar la ruta en .cfg
@@ -187,6 +194,21 @@ class MensErr(BoxLayout):
         super().__init__(**kwargs)
         self.mens_err = kwargs["mens_err"]
 
+class Dialog(BoxLayout):
+    mensaje = StringProperty()
+    si = StringProperty()
+    no = StringProperty()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.mensaje = kwargs["mensaje"]
+        self.si = kwargs["si"]
+        self.no = kwargs["no"]
+    
+    def ruta_sqlite(self):
+        filec = FileChooser.choose_dir()
+        print("\n", filec, "\n")
+    def ruta_xlsx(self):
+        ...
 
 class Crud():
     '''Registrar medidas: al Excel que venía usando,
@@ -237,7 +259,7 @@ class Crud():
 
 # Eventos bontones y declaración de app ###############################
 class PesoApp(BoxLayout):
-
+    '''ROOT'''
     # Esto es un enlace bidireccional (entra al .kv por 
     #  root.fechainput, vuelve como fechainput: fecha.text) *
     fechainput = StringProperty()
@@ -250,14 +272,31 @@ class PesoApp(BoxLayout):
     medbomn = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        '''root'''
+        '''root init. Secuencia de configuración inicial y
+        conexiones.'''
         super().__init__(**kwargs)
-        self.segpeso_cfg = Confg()
-        self.sistem = self.segpeso_cfg.SIS
-        self.fechainput = FECHA_SIS # * el valor defoult  
-        self.salida_datos = Crud()
-        self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
-        self.nom_xlsx = self.segpeso_cfg.ARCH
+        
+        # buscar archivo de config en directorio de trabajo
+        lista_dir = os.listdir()
+        if Confg.NOMBRE not in lista_dir:        
+            t_config = threading.Thread(target=PesoApp.dialog_emerg("SIN REFERENCIAS.", 
+                "No se encuentra configuraración previa\n\
+¿Elegir nombres / ubicaciones,", "Configurar",
+                "          Usar\n Predeterminados"))
+            t_config.daemon = True
+            t_config.start()
+
+            PesoApp.dialog_emerg("SIN REFERENCIAS.", 
+                "No se encuentra configuraración previa\n\
+¿Elegir nombres / ubicaciones,", "Configurar",
+                "          Usar\n Predeterminados")
+        else:
+            self.segpeso_cfg = Confg()
+            self.sistem = self.segpeso_cfg.SIS
+            self.fechainput = FECHA_SIS # * el valor defoult  
+            self.salida_datos = Crud()
+            self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
+            self.nom_xlsx = self.segpeso_cfg.ARCH
 
     def guardar(self):
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
@@ -329,9 +368,29 @@ class PesoApp(BoxLayout):
 
     # Métodos Ventanas emergentes ####
     @classmethod
+    def dialog_emerg(self, titulo:str, mns:str, si:str, no:str):
+        '''Dialogo emergente.'''
+        print(mns)
+        self.dialog = Popup(title=titulo,
+            title_size=20,
+            content=Dialog(mensaje=mns, si=si, no=no),
+            size_hint=(None, None),
+            size=(300,250))
+        
+        self.dialog.open()
+        
+    @classmethod
+    def cerrar_dialog(self):
+        self.dialog.dismiss()
+    
+    def a_conf(self):
+        PesoApp.configurar()
+        self.dialog.dismiss()
+        
+    @classmethod
     def adv_emerg(self, error):
         '''Declaración y apertura de ventana de aviso emergente.'''
-        print(error, "(dentro de adv_emerg)")
+        print(error)
         self.aviso = Popup(title="Advertencia",
             title_size=25,
             content=MensErr(mens_err=error),
@@ -350,19 +409,19 @@ class PesoApp(BoxLayout):
     def configurar(self):
         '''Declaración y apertura de ventana de configuración.'''
         print("Abrir ")
-        self.aviso = Popup(title="Configuración",
+        self.v_config = Popup(title="Configuración",
             title_size=25,
             content=ConfEmerg(),
             size_hint=(None, None),
             size=(300,300))
         
-        self.aviso.open()
+        self.v_config.open()
 
     @classmethod
     def cerrar_configurar(self):
         '''Evento de cierre para el botón del aviso emergente'''
         print("cierra emerg")
-        self.aviso.dismiss()
+        self.v_config.dismiss()
 
 
 class MainApp(App):
