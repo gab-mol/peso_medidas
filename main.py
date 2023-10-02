@@ -37,6 +37,10 @@ def hora() -> str:
     hora = time.strftime("%d/%m/%Y-%H:%M:%S", time.localtime(time.time()))
     return hora
 
+
+class PrimEjec(BoxLayout):
+    pass
+    
 # Archivo de configuración
 class Confg:
     '''Rutas a bases de datos.'''
@@ -52,13 +56,14 @@ class Confg:
         try:        
             Confg.cargar_conf()
         except:
-            PesoApp.a_conf()
+            Confg.cfg_defoult()
         finally:
             Confg.cargar_conf()
             print("Ruta a xlsx: ",self.ruta_xlsx)
         
     @classmethod
     def cargar_conf(self):
+        print("Cargando configuración...")
         self.config.read(self.NOMBRE)
         self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
         #self.ARCH = self.config["NOMBRES"]["xlsx"]
@@ -148,7 +153,6 @@ class LibroExcel:
             print(cell_obj.value, end = " ")
 
 ###############################
-
 
 class Verificar:
     '''Verificación de campos.'''
@@ -277,28 +281,22 @@ class PesoApp(BoxLayout):
         super().__init__(**kwargs)
         
         # buscar archivo de config en directorio de trabajo
-        lista_dir = os.listdir()
-        if Confg.NOMBRE not in lista_dir:        
-            t_config = threading.Thread(target=PesoApp.dialog_emerg("SIN REFERENCIAS.", 
-                "No se encuentra configuraración previa\n\
-¿Elegir nombres / ubicaciones,", "Configurar",
-                "          Usar\n Predeterminados"))
-            t_config.daemon = True
-            t_config.start()
 
-            PesoApp.dialog_emerg("SIN REFERENCIAS.", 
-                "No se encuentra configuraración previa\n\
-¿Elegir nombres / ubicaciones,", "Configurar",
-                "          Usar\n Predeterminados")
-        else:
-            self.segpeso_cfg = Confg()
-            self.sistem = self.segpeso_cfg.SIS
-            self.fechainput = FECHA_SIS # * el valor defoult  
-            self.salida_datos = Crud()
-            self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
-            self.nom_xlsx = self.segpeso_cfg.ARCH
+        self.segpeso_cfg = Confg()
+        self.sistem = self.segpeso_cfg.SIS
+        self.fechainput = FECHA_SIS # * el valor defoult  
+        self.salida_datos = Crud()
+        self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
+        self.nom_xlsx = self.segpeso_cfg.ARCH
 
     def guardar(self):
+        if not self.archivo_cfg:        
+            print("SIN cfg")
+            PesoApp.dialog_emerg("SIN REFERENCIAS.", 
+                "No se encuentra configuraración previa\n\
+¿Elegir nombres / ubicaciones?", "Configurar",
+                "          Usar\n Predeterminados")
+            
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
                  self.medbomx.text, self.medbomn.text]
         print(datos)
@@ -339,6 +337,8 @@ class PesoApp(BoxLayout):
 
     def mas(self):
         print("Próximamente...")
+
+        # Pruebas eventos (no relacionado a funcionalidad de mas())
         '''print("Modificando ruta")
         ruta_usr = filechooser.open_file(
             title="Elegir ruta a archivo xlsx a crear..."
@@ -383,6 +383,7 @@ class PesoApp(BoxLayout):
     def cerrar_dialog(self):
         self.dialog.dismiss()
     
+    @classmethod
     def a_conf(self):
         PesoApp.configurar()
         self.dialog.dismiss()
@@ -423,12 +424,25 @@ class PesoApp(BoxLayout):
         print("cierra emerg")
         self.v_config.dismiss()
 
+class Prueba(BoxLayout):
+    pass
 
 class MainApp(App):
     title = "Seguimiento Peso"
     def build(self):
-        return PesoApp()
-
+        # buscar archivo de config en directorio de trabajo
+        lista_dir = os.listdir()
+        if Confg.NOMBRE not in lista_dir:
+            self.archivo_cfg = True
+            return PrimEjec()
+        else:
+            print("SIN cfg")
+            self.archivo_cfg = False
+            return PesoApp()
+    
+    def cerr(self):
+        
+        self.root_window.close()
 
 if __name__ == '__main__':
     MainApp().run()
