@@ -28,10 +28,21 @@ import re
 import configparser
 import threading
 
-Config.set('graphics', 'width', 700)
-Config.set('graphics', 'height', 350)
+# valores defoult
+SIS = system()
 RUTA = os.getcwd()
 FECHA_SIS = time.strftime("%d/%m/%Y", time.localtime(time.time()))
+NOM_CFG = 'segpeso.cfg'
+NOM_DEFOULT = {
+    "xlsx": "registro_medidas.xlsx",
+    "xlsx_pr": "prueba.xlsx",
+    "bd_sql":"registro.db"}
+
+global _config
+if NOM_CFG in os.listdir():
+    _config = True
+else:
+    _config = False
 
 def hora() -> str:
     '''Para generar claves primarias.'''
@@ -47,7 +58,7 @@ class PrimEjec(Screen):
 class Confg:
     '''Rutas a bases de datos.'''
     
-    NOMBRE = 'segpeso.cfg'
+    NOMBRE = NOM_CFG
     config = configparser.ConfigParser()
     wdir = RUTA
     ruta_cfg = os.path.join(wdir, NOMBRE)
@@ -58,10 +69,11 @@ class Confg:
         try:        
             Confg.cargar_conf()
         except:
-            Confg.cfg_defoult()
-        finally:
-            Confg.cargar_conf()
-            print("Ruta a xlsx: ",self.ruta_xlsx)
+            #Confg.cfg_defoult()
+            print("!!! - Sin archivo .cfg en dir. de trabajo - !!!")
+        # finally:
+        #     Confg.cargar_conf()
+        #     print("Ruta a xlsx: ",self.ruta_xlsx)
         
     @classmethod
     def cargar_conf(self):
@@ -77,14 +89,13 @@ class Confg:
     
     @classmethod
     def cfg_defoult(self):    
-        self.config["NOMBRES"] = {"xlsx": "registro_medidas.xlsx",
-            "xlsx_pr": "prueba.xlsx", "bd_sql":"registro.db"}
+        self.config["NOMBRES"] = NOM_DEFOULT
         # Directorio de ejecución por defercto
         self.config["RUTAS"] = {"xlsx": f"{RUTA}", "xlsx_pr": f"{RUTA}", 
             "bd_sql":f"{RUTA}"}
 
-        # Detección de OS con platform
-        self.config["OPCIONES"] = {"sistema":system()}
+        # Guardad sistema (platform)
+        self.config["OPCIONES"] = {"sistema":SIS}
 
         with open(Confg.NOMBRE, 'w') as segpeso:
             self.config.write(segpeso)
@@ -268,6 +279,11 @@ class Prueba(Screen):
 
 
 # Eventos bontones y declaración de app ###############################
+
+Config.set('graphics', 'width', 700)
+Config.set('graphics', 'height', 350)
+
+
 class PesoApp(Screen):
     '''ROOT'''
     # Esto es un enlace bidireccional (entra al .kv por 
@@ -286,14 +302,20 @@ class PesoApp(Screen):
         conexiones.'''
         super().__init__(**kwargs)
         
-        # buscar archivo de config en directorio de trabajo
-
-        self.segpeso_cfg = Confg()
-        self.sistem = self.segpeso_cfg.SIS
-        self.fechainput = FECHA_SIS # * el valor defoult  
-        self.salida_datos = Crud()
-        self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
-        self.nom_xlsx = self.segpeso_cfg.ARCH
+        if _config:
+            self.segpeso_cfg = Confg()
+            self.sistem = self.segpeso_cfg.SIS
+            self.fechainput = FECHA_SIS # * el valor defoult  
+            self.salida_datos = Crud()
+            self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
+            self.nom_xlsx = self.segpeso_cfg.ARCH
+        else:
+            # seteo defoult
+            self.sistem = SIS
+            self.fechainput = FECHA_SIS 
+            self.salida_datos = Crud()
+            self.rutaxlsx = RUTA
+            self.nom_xlsx = NOM_DEFOULT["xlsx_pr"]
 
     def guardar(self):
         if not self.archivo_cfg:        
@@ -431,40 +453,24 @@ class PesoApp(Screen):
         self.v_config.dismiss()
 
 
-# Administrador de pantallas #####################
-class Inicio(ScreenManager):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        
- 
-'''
-inicio = Inicio()
-inicio.add_widget(PrimEjec(name = "sinconf"))
-inicio.add_widget(ConfEmerg(name = "configur"))
-inicio.add_widget(Prueba(name = "pr"))
-
-# probar 
-inicio.current = "pr"
-'''
-
 # Declaración de aplicación  #######################
 class MainApp(App):
     title = "Seguimiento Peso"
     def build(self):
-        inicio = Inicio()
+        # Administrador de pantallas
+        inicio = ScreenManager()
         inicio.add_widget(PrimEjec(name = "sinconf"))
         inicio.add_widget(ConfEmerg(name = "configur"))
         inicio.add_widget(Prueba(name = "pr"))
-
+        inicio.add_widget(PesoApp(name = "app"))
+        
         ## lanzar aviso de config, si no hay .cfg
-        lista_dir = os.listdir()
-        if Confg.NOMBRE not in lista_dir:
-            print("No detecta .cfg")
-            inicio.current = "sinconf"
-        else:
+        if _config:
             print("intenta iniciar app")
-            inicio.add_widget(PesoApp(name = "app"))
             inicio.current = "app"
+        else:
+            print("No detecta .cfg")
+            inicio.current = "sinconf"            
 
         return inicio
 
