@@ -8,149 +8,150 @@
     medbomn: medbomn
 
     # spacing: 1
-    padding: 5
-    canvas:
-        Color:
-            rgb: 1,1,1
-        Rectangle:
-            size: self.size
-            pos: self.pos
-    orientation: 'horizontal'
     BoxLayout:
-        orientation: 'vertical'
+        padding: 5
         canvas:
             Color:
-                rgb: .8,.8,.8
+                rgb: 1,1,1
             Rectangle:
                 size: self.size
                 pos: self.pos
-        Label:
-            font_size: ((self.height + self.width)/2)/9
-            markup: True
-            color: (0,0,0)
-            text: "[b]Guardar registro peso\n y medidas abdominales[/b]"
-        BoxLayout:
-            orientation: 'horizontal'
-            BoxLayout:
-                size_hint: .1, 1 
-            Label:
-                size_hint: .32, 1 
-                font_size: ((self.height + self.width)/2)/4.2
-                markup: True
-                color: (0,0,0)   
-                padding: [30, (self.height-self.line_height)/2]
-                text: "\nFecha del  \nregistro: "
-            TextInput:
-                id: fecha
-                size_hint: .5, .6
-                padding: [10,10]
-                text: root.fechainput
-                font_size: ((self.height + self.width)/2)/4
-                multiline: False
-            BoxLayout:
-                size_hint: .08, 1 
-        BoxLayout:
-            orientation: 'horizontal'
-            padding: [10,3,8,2]
-            spacing: .5
-            BoxLayout:
-                size_hint: .01,.8
-            Label:
-                size_hint: .28,.8
-                font_size: ((self.height + self.width)/2)/4.5
-                color: (0,0,0)
-                markup: True
-                text: "[b]   Ruta a\n  archivo:[/b]"
-            TextInput:
-                id: ruta
-                size_hint: .70,.8
-                font_size: ((self.height + self.width)/2)/14
-                multinline: True
-                text: root.rutaxlsx
-            BoxLayout:
-                size_hint: .01,.8
-        BoxLayout:
-            orientation: 'horizontal'
-            padding: 3
-            spacing: 1
-            Button:
-                text: "Guardar"
-                font_size: ((self.height + self.width)/2)/5
-                on_press: root.guardar()
-            Button:
-                text: "Configurar"
-                font_size: ((self.height + self.width)/2)/5
-                on_press: root.configurar()
-            Button:
-                text: "Abrir\n xlsx"
-                font_size: ((self.height + self.width)/2)/5
-                on_press: root.abrir_xlsx()
-            Button:
-                text: "   Otras\nopciones"
-                font_size: ((self.height + self.width)/2)/5
-                on_press: root.mas()
-
-    GridLayout:
-        cols: 2
-        spacing: 1
-        padding: 1
-        canvas:
-            Color:
-                rgb: 0,0,0
-            Rectangle:
-                size: self.size
-                pos: self.pos
-        GridLayout:
-            cols: 1
-            spacing: 2
-            LabelcB:
-                size_hint: 1, 1
-                font_size: ((self.height + self.width)/2)/5.5
-                markup: True
-                text: "[color=#000000]Peso (kg)[/color]"
-            LabelcB:
-                size_hint: 1, 1
-                font_size: ((self.height + self.width)/2)/6.5
-                markup: True
-                text: "[color=#000000]Med.SO max\n    (cm)[/color]"
-            LabelcB:
-                size_hint: 1, 1
-                font_size: ((self.height + self.width)/2)/6.5
-                markup: True
-                text: "[color=#000000]Med.SO min\n    (cm)[/color]"
-            LabelcB:
-                size_hint: 1, 1
-                font_size: ((self.height + self.width)/2)/6.5
-                markup: True
-                text: "[color=#000000]Med.BO max\n    (cm)[/color]"
-            LabelcB:
-                size_hint: 1, 1
-                font_size: ((self.height + self.width)/2)/6.5
-                markup: True
-                text: "[color=#000000]Med.BO min\n    (cm)[/color]"
+        orientation: 'horizontal'
         BoxLayout:
             orientation: 'vertical'
-            spacing: 2
             canvas:
                 Color:
                     rgb: .8,.8,.8
                 Rectangle:
                     size: self.size
                     pos: self.pos
-            CenteredTextInput:
-                id: peso
-                
-            CenteredTextInput:
-                id: medsomx
-                
-            CenteredTextInput:
-                id: medsomn
-                
-            CenteredTextInput:
-                id: medbomx
-                
-            CenteredTextInput:
-                id: medbomn
+            Label:
+                font_size: ((self.height + self.width)/2)/9
+                markup: True
+                color: (0,0,0)
+                text: "[b]Guardar registro peso\n y medidas abdominales[/b]"
+            BoxLayout:
+                orientation: 'horizontal'
+                BoxLayout:
+                    size_hint: .1, 1 
+                Label:
+                    size_hint: .32, 1 
+                    font_size: ((self.height + self.width)/2)/4.2
+                    markup: True
+                    color: (0,0,0)   
+                    padding: [30, (self.height-self.line_height)/2]
+                    text: "\nFecha del  \nregistro: "
+                TextInput:
+                    id: fecha
+                    size_hint: .5, .6
+                    padding: [10,10]
+                    text: root.fechainput
+                    font_size: ((self.height + self.width)/2)/4
+                    multiline: False
+                BoxLayout:
+                    size_hint: .08, 1 
+            BoxLayout:
+                orientation: 'horizontal'
+                padding: [10,3,8,2]
+                spacing: .5
+                BoxLayout:
+                    size_hint: .01,.8
+                Label:
+                    size_hint: .28,.8
+                    font_size: ((self.height + self.width)/2)/4.5
+                    color: (0,0,0)
+                    markup: True
+                    text: "[b]   Ruta a\n  archivo:[/b]"
+                TextInput:
+                    id: ruta
+                    size_hint: .70,.8
+                    font_size: ((self.height + self.width)/2)/14
+                    multinline: True
+                    text: root.rutaxlsx
+                BoxLayout:
+                    size_hint: .01,.8
+            BoxLayout:
+                orientation: 'horizontal'
+                padding: 3
+                spacing: 1
+                Button:
+                    text: "Guardar"
+                    font_size: ((self.height + self.width)/2)/5
+                    on_press: root.guardar()
+                Button:
+                    text: "Configurar"
+                    font_size: ((self.height + self.width)/2)/5
+                    on_press: root.configurar()
+                Button:
+                    text: "Abrir\n xlsx"
+                    font_size: ((self.height + self.width)/2)/5
+                    on_press: root.abrir_xlsx()
+                Button:
+                    text: "   Otras\nopciones"
+                    font_size: ((self.height + self.width)/2)/5
+                    on_press: root.mas()
+
+        GridLayout:
+            cols: 2
+            spacing: 1
+            padding: 1
+            canvas:
+                Color:
+                    rgb: 0,0,0
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            GridLayout:
+                cols: 1
+                spacing: 2
+                LabelcB:
+                    size_hint: 1, 1
+                    font_size: ((self.height + self.width)/2)/5.5
+                    markup: True
+                    text: "[color=#000000]Peso (kg)[/color]"
+                LabelcB:
+                    size_hint: 1, 1
+                    font_size: ((self.height + self.width)/2)/6.5
+                    markup: True
+                    text: "[color=#000000]Med.SO max\n    (cm)[/color]"
+                LabelcB:
+                    size_hint: 1, 1
+                    font_size: ((self.height + self.width)/2)/6.5
+                    markup: True
+                    text: "[color=#000000]Med.SO min\n    (cm)[/color]"
+                LabelcB:
+                    size_hint: 1, 1
+                    font_size: ((self.height + self.width)/2)/6.5
+                    markup: True
+                    text: "[color=#000000]Med.BO max\n    (cm)[/color]"
+                LabelcB:
+                    size_hint: 1, 1
+                    font_size: ((self.height + self.width)/2)/6.5
+                    markup: True
+                    text: "[color=#000000]Med.BO min\n    (cm)[/color]"
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: 2
+                canvas:
+                    Color:
+                        rgb: .8,.8,.8
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                CenteredTextInput:
+                    id: peso
+                    
+                CenteredTextInput:
+                    id: medsomx
+                    
+                CenteredTextInput:
+                    id: medsomn
+                    
+                CenteredTextInput:
+                    id: medbomx
+                    
+                CenteredTextInput:
+                    id: medbomn
                 
 
 <LabelcB@Label>:
@@ -248,11 +249,11 @@
         Button:
             text: "Configurar"
             size_hint: 1, 0.6
-            on_press: app.root.a_conf()
+            on_press: app.root.current = "configur"
         Button:
             text: "Usar\n Predeterminados"
             size_hint: 1, 0.6
-            on_press: app.cerr()
+            on_press: app.root.current = "app"
    
 
 

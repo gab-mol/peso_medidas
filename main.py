@@ -10,6 +10,7 @@ from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.screenmanager import Screen, ScreenManager
 ## from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
 
 # Dependencias bases de datos:
@@ -38,9 +39,10 @@ def hora() -> str:
     return hora
 
 
-class PrimEjec(BoxLayout):
+class PrimEjec(Screen):
     pass
-    
+
+
 # Archivo de configuración
 class Confg:
     '''Rutas a bases de datos.'''
@@ -185,18 +187,17 @@ class Verificar:
         return salida
 
 
-class ConfEmerg(BoxLayout):
+class ConfEmerg(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
-    def b1(self):
-        print("b1 press")
+
 
 class MensErr(BoxLayout):
     mens_err = StringProperty()
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.mens_err = kwargs["mens_err"]
+
 
 class Dialog(BoxLayout):
     mensaje = StringProperty()
@@ -213,6 +214,7 @@ class Dialog(BoxLayout):
         print("\n", filec, "\n")
     def ruta_xlsx(self):
         ...
+
 
 class Crud():
     '''Registrar medidas: al Excel que venía usando,
@@ -261,8 +263,12 @@ class Crud():
         ...
 
 
+class Prueba(Screen):
+    pass
+
+
 # Eventos bontones y declaración de app ###############################
-class PesoApp(BoxLayout):
+class PesoApp(Screen):
     '''ROOT'''
     # Esto es un enlace bidireccional (entra al .kv por 
     #  root.fechainput, vuelve como fechainput: fecha.text) *
@@ -424,25 +430,43 @@ class PesoApp(BoxLayout):
         print("cierra emerg")
         self.v_config.dismiss()
 
-class Prueba(BoxLayout):
-    pass
 
+# Administrador de pantallas #####################
+class Inicio(ScreenManager):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+ 
+'''
+inicio = Inicio()
+inicio.add_widget(PrimEjec(name = "sinconf"))
+inicio.add_widget(ConfEmerg(name = "configur"))
+inicio.add_widget(Prueba(name = "pr"))
+
+# probar 
+inicio.current = "pr"
+'''
+
+# Declaración de aplicación  #######################
 class MainApp(App):
     title = "Seguimiento Peso"
     def build(self):
-        # buscar archivo de config en directorio de trabajo
+        inicio = Inicio()
+        inicio.add_widget(PrimEjec(name = "sinconf"))
+        inicio.add_widget(ConfEmerg(name = "configur"))
+        inicio.add_widget(Prueba(name = "pr"))
+
+        ## lanzar aviso de config, si no hay .cfg
         lista_dir = os.listdir()
         if Confg.NOMBRE not in lista_dir:
-            self.archivo_cfg = True
-            return PrimEjec()
+            print("No detecta .cfg")
+            inicio.current = "sinconf"
         else:
-            print("SIN cfg")
-            self.archivo_cfg = False
-            return PesoApp()
-    
-    def cerr(self):
-        
-        self.root_window.close()
+            print("intenta iniciar app")
+            inicio.add_widget(PesoApp(name = "app"))
+            inicio.current = "app"
+
+        return inicio
 
 if __name__ == '__main__':
     MainApp().run()
