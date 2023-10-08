@@ -181,6 +181,10 @@
             on_press: app.root.cerrar_adv_emerg()
 
 <ConfEmerg>:
+    dir_xlsx: dir_xlsx
+    nombre_xlsx: nombre_xlsx
+
+
     orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
@@ -208,6 +212,15 @@
                 size_hint: 1, 1
             Button:
                 size_hint: 1, 1
+        BoxLayout:
+            orientation: 'vertical'
+            TextInput:
+                id: dir_xlsx
+            TextInput:
+                id: nombre_xlsx
+            TextInput:               
+
+
     BoxLayout:
         size_hint: 1, 0.3
         padding: 8

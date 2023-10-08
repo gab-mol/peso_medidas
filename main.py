@@ -29,14 +29,13 @@ import configparser
 import threading
 
 # valores defoult
-SIS = system()
-RUTA = os.getcwd()
+RUTA_DIR = os.getcwd()
 FECHA_SIS = time.strftime("%d/%m/%Y", time.localtime(time.time()))
 NOM_CFG = 'segpeso.cfg'
 NOM_DEFOULT = {
     "xlsx": "registro_medidas.xlsx",
     "xlsx_pr": "prueba.xlsx",
-    "bd_sql":"registro.db"}
+    "bd_sqlite":"registro.db"}
 
 global _config
 if NOM_CFG in os.listdir():
@@ -56,58 +55,66 @@ class PrimEjec(Screen):
 
 # Archivo de configuración
 class Confg:
-    '''Rutas a bases de datos.'''
-    
-    NOMBRE = NOM_CFG
-    config = configparser.ConfigParser()
-    wdir = RUTA
-    ruta_cfg = os.path.join(wdir, NOMBRE)
-    
+    '''Nombres, directorios y opciones.'''
     def __init__(self) -> None:
         '''Lee/Crea .cfg en dir trabajo.'''
-
-        try:        
-            Confg.cargar_conf()
-        except:
-            #Confg.cfg_defoult()
-            print("!!! - Sin archivo .cfg en dir. de trabajo - !!!")
-        # finally:
-        #     Confg.cargar_conf()
-        #     print("Ruta a xlsx: ",self.ruta_xlsx)
-        
-    @classmethod
-    def cargar_conf(self):
-        print("Cargando configuración...")
-        self.config.read(self.NOMBRE)
-        self.ruta_xlsx = self.config["RUTAS"]["xlsx"]
-        #self.ARCH = self.config["NOMBRES"]["xlsx"]
-        self.SIS = self.config["OPCIONES"]["sistema"]
-
-        # "xlsx_pr"  es para el desarrollo !!!!
-        self.ruta_xlsx_pr = self.config["RUTAS"]["xlsx_pr"]
-        self.ARCH = self.config["NOMBRES"]["xlsx_pr"]
+        self.config = configparser.ConfigParser()
+        self.RUTA_CFG = os.path.join(RUTA_DIR, NOM_CFG)
     
-    @classmethod
-    def cfg_defoult(self):    
+    def cargar_conf(self):
+        '''Carga archivo .cgf en wdir.'''
+        print("Cargando configuración...")
+        try:
+            self.config.read(self.RUTA_CFG)
+        except:
+            raise Exception("Archivo .cfg no encontrado en directorio de trabajo")
+        
+        self.dir_xlsx = self.config["RUTAS"]["xlsx"]
+        self.nom_xlsx = self.config["NOMBRES"]["xlsx"]
+        
+        self.dir_bd = self.config["RUTAS"]["bd_sqlite"]
+        self.nom_bd = self.config["NOMBRES"]["bd_sqlite"]        
+        
+        self.SIS = self.config["OPCIONES"]["sistema"]
+    
+    def cfg_defoult(self):
+        '''Guarda .cfg con valores por defecto.'''    
         self.config["NOMBRES"] = NOM_DEFOULT
         # Directorio de ejecución por defercto
-        self.config["RUTAS"] = {"xlsx": f"{RUTA}", "xlsx_pr": f"{RUTA}", 
-            "bd_sql":f"{RUTA}"}
+        self.config["RUTAS"] = {
+            "xlsx": f"{RUTA_DIR}",
+            "xlsx_pr": f"{RUTA_DIR}", 
+            "bd_sqlite":f"{RUTA_DIR}"
+            }
+    
+        # Guardad sistema (platform)
+        self.config["OPCIONES"] = {"sistema":system()}
+
+        with open(self.RUTA_CFG, 'w') as segpeso:
+            self.config.write(segpeso)
+
+        print("\nCreado .cgf")
+
+    def cfg_custom(self, dir_xlsx:str, nombre_xlsx:str):
+        '''Guarda .cfg con ruta elegida por usuario.'''
+        self.config["NOMBRES"] = {
+            "xlsx": nombre_xlsx+".xlsx",
+            "xlsx_pr": "prueba.xlsx",
+            "bd_sqlite":"registro.db"}
+        
+        self.config["RUTAS"] = {
+            "xlsx": f"{dir_xlsx}",
+            "xlsx_pr": f"{RUTA_DIR}", 
+            "bd_sqlite":f"{RUTA_DIR}"
+            }
 
         # Guardad sistema (platform)
-        self.config["OPCIONES"] = {"sistema":SIS}
+        self.config["OPCIONES"] = {"sistema":system()}
 
-        with open(Confg.NOMBRE, 'w') as segpeso:
+        with open(self.RUTA_CFG, 'w') as segpeso:
             self.config.write(segpeso)
-        #raise Exception("Sin archivo cfg, creado con valor nulo")
-        print("Sin archivo cfg, creado con valor nulo")
 
-    def guardar_ruta(self, nueva_ruta:str):
-        '''Guardar la ruta en .cfg
-        (llamar en método del botón)'''
-        self.config["RUTAS"] = {"xlsx": nueva_ruta}
-        with open(self.ruta_cfg, 'w') as segpeso:
-            self.config.write(segpeso)
+        print("\nCreado .cgf")
 
 # Clases de conexión a bases ###############################
 ## Conexión con base de datos SQL (ORM)
@@ -129,34 +136,33 @@ class Registro(Model):
 try:
     bd.connect()
     bd.create_tables([Registro])
-    print(f"\n**\nÉxito al conectar con bd:\n {os.path.join(RUTA,nombr_bd)}\n**\n")
+    print(f"\n**\nÉxito al conectar con bd:\n {os.path.join(RUTA_DIR,nombr_bd)}\n**\n")
 except:
     raise Exception("\nError de Conexión con bd SQL\n")
 
 ## Conexión con libro excel
 class LibroExcel:
     '''Conexión con archivo excel'''
-    def __init__(self):
-        config = Confg()
-        self.RUTA_XLSX = os.path.join(config.ruta_xlsx_pr, config.ARCH) 
-        dir_cont = os.listdir(RUTA)
-        ARCH = config.ARCH
+    def __init__(self, dir_xlsx:str, nom_xlsx:str):
+        self.ruta_xlsx= os.path.join(dir_xlsx, nom_xlsx)
+        dir_cont = os.listdir(dir_xlsx)
+        
         # Algoritmo para crear/leer condicionalmente el xlsx
-        if not ARCH in dir_cont:
+        if not nom_xlsx in dir_cont:
             print("Archivo excel faltante en directorio elegido.")
-            print("Creando... ", "\n\t", self.RUTA_XLSX,"\n")
+            print("Creando... ", "\n\t", self.ruta_xlsx,"\n")
             self.libro = openpyxl.Workbook()
             hoja = self.libro.active
             hoja.title = "Tabla_medidas"
             self.hoja = self.libro["Tabla_medidas"]
             self.hoja.append(("fecha", "peso", "medsomx", "medsomn", "medbomx", "medbomn"))
 
-            self.libro.save(self.RUTA_XLSX)
+            self.libro.save(self.ruta_xlsx)
 
-            self.libro = openpyxl.load_workbook(self.RUTA_XLSX)
+            self.libro = openpyxl.load_workbook(self.ruta_xlsx)
         else:
-            print("Cargando excel... : ", "\n\t", self.RUTA_XLSX,"\n")
-            self.libro = openpyxl.load_workbook(self.RUTA_XLSX)
+            print("Cargando excel... : ", "\n\t", self.ruta_xlsx,"\n")
+            self.libro = openpyxl.load_workbook(self.ruta_xlsx)
 
         self.hoja = self.libro["Tabla_medidas"]
     
@@ -199,9 +205,18 @@ class Verificar:
 
 
 class ConfEmerg(Screen):
+    dir_xlsx =  ObjectProperty(None)
+    nombre_xlsx =  ObjectProperty(None)
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    def configurar(self):
+        
+        
+        self.config = Confg()
+        print("anda")
+        
 
 class MensErr(BoxLayout):
     mens_err = StringProperty()
@@ -227,18 +242,19 @@ class Dialog(BoxLayout):
         ...
 
 
-class Crud():
+class Crud:
     '''Registrar medidas: al Excel que venía usando,
     y a una base SQL (métodos CRUD).
     \nSQLite\n
     Permite nulos en todos los campos menos fecha.\n 
     La clave primaria es compuesta de la fecha y la
     fecha y hora del registro.
+    Usuario no tiene acceso.
     '''
     
-    def __init__(self) -> None:
+    def __init__(self, dir_xlsx:str, nom_xlsx:str):
         self.tb = Registro
-        self.lib_excel = LibroExcel()
+        self.lib_excel = LibroExcel(dir_xlsx, nom_xlsx)
 
     def alta(self, fecha_s:str, datos_v:list):
 
@@ -301,33 +317,26 @@ class PesoApp(Screen):
         '''root init. Secuencia de configuración inicial y
         conexiones.'''
         super().__init__(**kwargs)
-        
+        self.config = Confg()
         if _config:
-            self.segpeso_cfg = Confg()
-            self.sistem = self.segpeso_cfg.SIS
-            self.fechainput = FECHA_SIS # * el valor defoult  
-            self.salida_datos = Crud()
-            self.rutaxlsx = self.segpeso_cfg.ruta_xlsx_pr
-            self.nom_xlsx = self.segpeso_cfg.ARCH
+            print("\nPESOAPP INIT: .cfg\n")
+            self.sistem = self.config.SIS
+            self.fechainput = FECHA_SIS # * el valor defoult
+            self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
         else:
-            # seteo defoult
-            self.sistem = SIS
+            print("\nPESOAPP INIT: defoult\n")
+            self.config.cfg_defoult()
+            self.sistem = self.config.sistema
             self.fechainput = FECHA_SIS 
-            self.salida_datos = Crud()
-            self.rutaxlsx = RUTA
-            self.nom_xlsx = NOM_DEFOULT["xlsx_pr"]
+            self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
 
     def guardar(self):
-        if not self.archivo_cfg:        
-            print("SIN cfg")
-            PesoApp.dialog_emerg("SIN REFERENCIAS.", 
-                "No se encuentra configuraración previa\n\
-¿Elegir nombres / ubicaciones?", "Configurar",
-                "          Usar\n Predeterminados")
-            
+        '''Permite al usuario guardar nombre y directorio para el .xlsx'''
+
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
                  self.medbomx.text, self.medbomn.text]
-        print(datos)
+        print("\nINPUT: ",datos)
+        
         ## Verificar campos ##
         err_form = Verificar.formato(datos) 
 
@@ -466,10 +475,10 @@ class MainApp(App):
         
         ## lanzar aviso de config, si no hay .cfg
         if _config:
-            print("intenta iniciar app")
+            print("#####\nintenta iniciar app\n#####")
             inicio.current = "app"
         else:
-            print("No detecta .cfg")
+            print("#####\nNo detecta .cfg\n#####")
             inicio.current = "sinconf"            
 
         return inicio
