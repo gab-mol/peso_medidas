@@ -37,11 +37,16 @@ NOM_DEFOULT = {
     "xlsx_pr": "prueba.xlsx",
     "bd_sqlite":"registro.db"}
 
-global _config
-if NOM_CFG in os.listdir():
-    _config = True
-else:
-    _config = False
+
+def buscar_cfg():
+    global _config, _init_confg
+    if NOM_CFG in os.listdir():
+        _config = True
+    else:
+        _config = False
+
+    _init_confg = False
+buscar_cfg()
 
 def hora() -> str:
     '''Para generar claves primarias.'''
@@ -50,8 +55,26 @@ def hora() -> str:
 
 
 class PrimEjec(Screen):
-    pass
+    def __init__(self, **kw):
+        global _config, _init_confg
+        super().__init__(**kw)
+        print("Se inició config? :: ", _init_confg)
+        self.config = Confg()
 
+    def ini_conf(self):
+        print("entró a ini_conf()")
+        global _init_confg
+        _init_confg = True
+
+    def confg_defoult(self):
+        global _init_confg, inicio
+        print("\nSeleccionada configuración por defecto. Iniciando APP.")
+        self.config.cfg_defoult()
+        buscar_cfg()
+        _init_confg = True
+        time.sleep(2)
+        inicio.add_widget(PesoApp(name = "app"))
+        inicio.current = "app"
 
 # Archivo de configuración
 class Confg:
@@ -75,7 +98,7 @@ class Confg:
         self.dir_bd = self.config["RUTAS"]["bd_sqlite"]
         self.nom_bd = self.config["NOMBRES"]["bd_sqlite"]        
         
-        self.SIS = self.config["OPCIONES"]["sistema"]
+        self.sistema = self.config["OPCIONES"]["sistema"]
     
     def cfg_defoult(self):
         '''Guarda .cfg con valores por defecto.'''    
@@ -212,11 +235,13 @@ class ConfEmerg(Screen):
         super().__init__(**kwargs)
 
     def configurar(self):
-        
+        '''Permite al usuario guardar nombre y directorio para el .xlsx'''
         
         self.config = Confg()
         print("anda")
-        
+    
+    def b1(self):
+        print("Se inició config? :: ", _init_confg)
 
 class MensErr(BoxLayout):
     mens_err = StringProperty()
@@ -318,21 +343,30 @@ class PesoApp(Screen):
         conexiones.'''
         super().__init__(**kwargs)
         self.config = Confg()
+        print("inicializado PesoApp")
+    
         if _config:
+            # inicialización con carga de configuración previa
             print("\nPESOAPP INIT: .cfg\n")
-            self.sistem = self.config.SIS
+            self.config.cargar_conf()
+            self.sistem = self.config.sistema
             self.fechainput = FECHA_SIS # * el valor defoult
             self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
-        else:
+        elif not _config and not _init_confg:
+            # evitar que cree el .cfg al cargar screen
+            print("not _config and not _init_confg")
+            pass
+        elif not _config and _init_confg:
+            # permite que inicialice cuando se a precionado "Configurar"
             print("\nPESOAPP INIT: defoult\n")
-            self.config.cfg_defoult()
+            #self.config.cfg_defoult()
+            self.config.cargar_conf()
             self.sistem = self.config.sistema
             self.fechainput = FECHA_SIS 
             self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
 
     def guardar(self):
-        '''Permite al usuario guardar nombre y directorio para el .xlsx'''
-
+        '''Guardar registro de medidas en .db y .xlsx a la vez.'''
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
                  self.medbomx.text, self.medbomn.text]
         print("\nINPUT: ",datos)
@@ -467,21 +501,24 @@ class MainApp(App):
     title = "Seguimiento Peso"
     def build(self):
         # Administrador de pantallas
+        global inicio
         inicio = ScreenManager()
         inicio.add_widget(PrimEjec(name = "sinconf"))
         inicio.add_widget(ConfEmerg(name = "configur"))
         inicio.add_widget(Prueba(name = "pr"))
-        inicio.add_widget(PesoApp(name = "app"))
+        #inicio.add_widget(PesoApp(name = "app"))
         
         ## lanzar aviso de config, si no hay .cfg
         if _config:
             print("#####\nintenta iniciar app\n#####")
+            inicio.add_widget(PesoApp(name = "app"))
             inicio.current = "app"
         else:
             print("#####\nNo detecta .cfg\n#####")
-            inicio.current = "sinconf"            
+            inicio.current = "sinconf"
 
-        return inicio
+        return inicio        
+
 
 if __name__ == '__main__':
     MainApp().run()

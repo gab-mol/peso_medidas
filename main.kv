@@ -218,7 +218,7 @@
                 id: dir_xlsx
             TextInput:
                 id: nombre_xlsx
-            TextInput:               
+            BoxLayout:               
 
 
     BoxLayout:
@@ -262,11 +262,15 @@
         Button:
             text: "Configurar"
             size_hint: 1, 0.6
-            on_press: app.root.current = "configur"
+            on_press: 
+                root.ini_conf()
+                app.root.current = "configur"
         Button:
             text: "Usar\n Predeterminados"
             size_hint: 1, 0.6
-            on_press: app.root.current = "app"
+            on_press: 
+                root.confg_defoult()
+
    
 
 
