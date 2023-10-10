@@ -10,7 +10,7 @@ from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 ## from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
 
 # Dependencias bases de datos:
@@ -39,13 +39,12 @@ NOM_DEFOULT = {
 
 
 def buscar_cfg():
-    global _config, _init_confg
+    global _config
     if NOM_CFG in os.listdir():
         _config = True
     else:
         _config = False
 
-    _init_confg = False
 buscar_cfg()
 
 def hora() -> str:
@@ -56,23 +55,21 @@ def hora() -> str:
 
 class PrimEjec(Screen):
     def __init__(self, **kw):
-        global _config, _init_confg
+        global _config
         super().__init__(**kw)
-        print("Se inició config? :: ", _init_confg)
         self.config = Confg()
 
-    def ini_conf(self):
-        print("entró a ini_conf()")
-        global _init_confg
-        _init_confg = True
+    # def ini_conf(self):
+    #     print("entró a ini_conf()")
+    #     global _init_confg
+    #     _init_confg = True
 
     def confg_defoult(self):
-        global _init_confg, inicio
+        global inicio
         print("\nSeleccionada configuración por defecto. Iniciando APP.")
         self.config.cfg_defoult()
         buscar_cfg()
-        _init_confg = True
-        time.sleep(2)
+        time.sleep(1)
         inicio.add_widget(PesoApp(name = "app"))
         inicio.current = "app"
 
@@ -240,8 +237,8 @@ class ConfEmerg(Screen):
         self.config = Confg()
         print("anda")
     
-    def b1(self):
-        print("Se inició config? :: ", _init_confg)
+    def buscador_dir(self):
+        print("abrir buscador")
 
 class MensErr(BoxLayout):
     mens_err = StringProperty()
@@ -343,27 +340,18 @@ class PesoApp(Screen):
         conexiones.'''
         super().__init__(**kwargs)
         self.config = Confg()
-        print("inicializado PesoApp")
-    
-        if _config:
-            # inicialización con carga de configuración previa
+        print("inicializado class PesoApp")
+
+        try:
             print("\nPESOAPP INIT: .cfg\n")
             self.config.cargar_conf()
-            self.sistem = self.config.sistema
-            self.fechainput = FECHA_SIS # * el valor defoult
-            self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
-        elif not _config and not _init_confg:
-            # evitar que cree el .cfg al cargar screen
-            print("not _config and not _init_confg")
-            pass
-        elif not _config and _init_confg:
-            # permite que inicialice cuando se a precionado "Configurar"
-            print("\nPESOAPP INIT: defoult\n")
-            #self.config.cfg_defoult()
-            self.config.cargar_conf()
-            self.sistem = self.config.sistema
-            self.fechainput = FECHA_SIS 
-            self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
+        except:
+            raise Exception("Error al leer .cfg")
+        
+        self.sistem = self.config.sistema
+        self.fechainput = FECHA_SIS # * el valor defoult
+        self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
+
 
     def guardar(self):
         '''Guardar registro de medidas en .db y .xlsx a la vez.'''
@@ -502,7 +490,7 @@ class MainApp(App):
     def build(self):
         # Administrador de pantallas
         global inicio
-        inicio = ScreenManager()
+        inicio = ScreenManager(transition=FadeTransition())
         inicio.add_widget(PrimEjec(name = "sinconf"))
         inicio.add_widget(ConfEmerg(name = "configur"))
         inicio.add_widget(Prueba(name = "pr"))
