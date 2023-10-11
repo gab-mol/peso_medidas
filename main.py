@@ -11,7 +11,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
-## from kivy.uix.filechooser import FileChooser # por ahora prefiero evitarlo
+
 
 # Dependencias bases de datos:
 from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
@@ -23,7 +23,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 import time
 import os
 from platform import system
-from plyer.facades import FileChooser
+from plyer import filechooser # me falta conocimiento para entender por qué funciona
 import re
 import configparser
 import threading
@@ -225,20 +225,26 @@ class Verificar:
 
 
 class ConfEmerg(Screen):
-    dir_xlsx =  ObjectProperty(None)
+    dir_xlsx =  StringProperty()
     nombre_xlsx =  ObjectProperty(None)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.dir_xlsx = "\n      <<carpeta>>"
+        
+        self.config = Confg()
 
     def configurar(self):
         '''Permite al usuario guardar nombre y directorio para el .xlsx'''
         
-        self.config = Confg()
-        print("anda")
+        self.config.cfg_custom(self.dir_xlsx, self.nombre_xlsx)
     
     def buscador_dir(self):
-        print("abrir buscador")
+        '''Usa el buscador de dir. de plyer'''
+        dir = filechooser.choose_dir()[0]
+        self.dir_xlsx = dir
+        
+        print("Seleccionada carpeta: ", dir)
 
 class MensErr(BoxLayout):
     mens_err = StringProperty()
@@ -258,7 +264,7 @@ class Dialog(BoxLayout):
         self.no = kwargs["no"]
     
     def ruta_sqlite(self):
-        filec = FileChooser.choose_dir()
+        filec = filechooser.choose_dir()
         print("\n", filec, "\n")
     def ruta_xlsx(self):
         ...
@@ -312,8 +318,6 @@ class Crud:
         ...
 
 
-class Prueba(Screen):
-    pass
 
 
 # Eventos bontones y declaración de app ###############################
@@ -493,7 +497,6 @@ class MainApp(App):
         inicio = ScreenManager(transition=FadeTransition())
         inicio.add_widget(PrimEjec(name = "sinconf"))
         inicio.add_widget(ConfEmerg(name = "configur"))
-        inicio.add_widget(Prueba(name = "pr"))
         #inicio.add_widget(PesoApp(name = "app"))
         
         ## lanzar aviso de config, si no hay .cfg
