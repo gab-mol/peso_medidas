@@ -181,7 +181,7 @@
 
 <ConfEmerg>:
     dir_xlsx: dir_xlsx_input.text
-    nombre_xlsx: nombre_xlsx
+    nombre_xlsx: nombre_xlsx_input.text
 
     BoxLayout:
         orientation: 'vertical'
@@ -221,9 +221,10 @@
                     spacing:10
                     orientation: 'vertical'
                     TextInput:
-                        id: nombre_xlsx
+                        id: nombre_xlsx_input
                         multiline: False
                         padding: [25, (self.height-self.line_height)/2]
+                        font_size: ((self.height + self.width)/2)/6
                         size_hint: 1, 1
                     BoxLayout:
                         orientation: 'horizontal'
@@ -232,10 +233,10 @@
                             id: dir_xlsx_input
                             multiline: True
                             text: root.dir_xlsx
-                            size_hint: 1, 1
+                            size_hint: .7, 1
 
                         Button:
-                            size_hint: 1,1
+                            size_hint: .3,1
                             text: "Buscar"
                             on_press: root.buscador_dir()
 
@@ -245,12 +246,18 @@
             orientation: 'horizontal'
             size_hint: 1, .2
             padding: 8
+            spacing: 10
             BoxLayout:
             Button:
                 text: "Volver"
                 font_size: 20
                 size_hint: 0.7, 1
                 on_press: app.root.current = "sinconf"
+            Button:
+                text: "Guardar"
+                font_size: 20
+                size_hint: 0.7, 1
+                on_press: root.configurar()
             BoxLayout:
 
 <Dialog>:

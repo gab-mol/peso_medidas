@@ -226,23 +226,32 @@ class Verificar:
 
 class ConfEmerg(Screen):
     dir_xlsx =  StringProperty()
-    nombre_xlsx =  ObjectProperty(None)
+    nombre_xlsx =  StringProperty()
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dir_xlsx = "\n      <<carpeta>>"
+        self.dir_xlsx = "\n      ruta carpeta ..."
         
         self.config = Confg()
 
     def configurar(self):
         '''Permite al usuario guardar nombre y directorio para el .xlsx'''
-        
-        self.config.cfg_custom(self.dir_xlsx, self.nombre_xlsx)
+        nombre = str(self.nombre_xlsx)
+        if not self.nombre_xlsx.find(".xlsx"):
+            nombre = nombre+".xlsx"
+        self.config.cfg_custom(self.dir_xlsx, nombre)
+        print(nombre)
+        time.sleep(2)
+        inicio.add_widget(PesoApp(name = "app"))
+        inicio.current = "app"
     
     def buscador_dir(self):
         '''Usa el buscador de dir. de plyer'''
-        dir = filechooser.choose_dir()[0]
-        self.dir_xlsx = dir
+        try:
+            dir = filechooser.choose_dir()[0]
+            self.dir_xlsx = dir
+        except:
+            raise Exception("Falla en el filechooser.")
         
         print("Seleccionada carpeta: ", dir)
 
