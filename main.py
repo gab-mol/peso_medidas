@@ -23,10 +23,11 @@ from openpyxl.worksheet.worksheet import Worksheet
 import time
 import os
 from platform import system
-from plyer import filechooser # me falta conocimiento para entender por qué funciona
-import re
+from plyer import filechooser # no funciona como deseo,
+from tkinter import filedialog # uso el de tkinter por ahora
 import configparser
 import threading
+import re
 
 # valores defoult
 RUTA_DIR = os.getcwd()
@@ -195,15 +196,12 @@ class LibroExcel:
 
 class Verificar:
     '''Verificación de campos.'''
-    def __init__(self) -> None:
-        #lista_datos = lista_datos
-        pass
 
     def formato(lista_datos:list[str]) -> list[bool]:
         '''Aviso emergente sobre caracteres no válidos y doble coma'''
         l_e = [True for _ in range(len(lista_datos))]
         for i in range(len(lista_datos)):
-            if re.search(r'[$%&"\'()a-zA-Z¡!¿?#\][/\\]', lista_datos[i]):
+            if re.search(r'[$%&"\'()¡!¿?#\][/\\]', lista_datos[i]):
                 print(f"Valor no válido       \n # EN: {lista_datos[i]} (Verificar.formato)")
                 l_e[i] = False 
         for i in range(len(lista_datos)):
@@ -222,38 +220,68 @@ class Verificar:
             else:
                 salida.append(dato)
         return salida
-
+    
+    @classmethod
+    def verf_nom_xlsx(self, nombre:str) -> str | None:
+        '''Avisa de caracteres no válidos y agrega extensión,
+        de faltar.'''
+        if re.search(r'[$%&"\'¡!,¿?#\][/\\]', nombre):
+            print("aviso emergente en verf_nom_xlsx()")
+            self.nom_inval_pop = MainApp.dialog_emerg("Nombre inválido", 
+                "Introduzca nombre válido")
+            self.nom_inval_pop.open()
+            return None
+        else:
+            if re.search(r'[a-zA-Z0-9].xlsx', nombre):
+                nombre = nombre + ".xlsx"
+            return nombre
+    
+    @classmethod
+    def cerr_aviso_xlsx(self):
+        MainApp.cerrar_dialog(self.nom_inval_pop)
 
 class ConfEmerg(Screen):
-    dir_xlsx =  StringProperty()
-    nombre_xlsx =  StringProperty()
-    
+    dir_xlsx = StringProperty()
+    nombre_xlsx = StringProperty()
+    mns_dir = "\n      ruta carpeta ..."
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dir_xlsx = "\n      ruta carpeta ..."
+        self.dir_xlsx = self.mns_dir
         
         self.config = Confg()
 
+    @classmethod
     def configurar(self):
         '''Permite al usuario guardar nombre y directorio para el .xlsx'''
-        nombre = str(self.nombre_xlsx)
-        if not self.nombre_xlsx.find(".xlsx"):
-            nombre = nombre+".xlsx"
-        self.config.cfg_custom(self.dir_xlsx, nombre)
-        print(nombre)
-        time.sleep(2)
-        inicio.add_widget(PesoApp(name = "app"))
-        inicio.current = "app"
-    
+        print(self.nombre_xlsx)
+        if not self.nombre_xlsx or self.dir_xlsx == self.mns_dir:
+            print("aviso emergente en configurar()")
+            self.sin_camp_pop = MainApp.dialog_emerg("Aviso", 
+                "Complete los campos faltantes.")
+            self.sin_camp_pop.open()
+        else:
+            nombre = Verificar.verf_nom_xlsx(self.nombre_xlsx)
+            if nombre:
+                self.config.cfg_custom(self.dir_xlsx, nombre)
+                print(nombre)
+                time.sleep(2)
+                inicio.add_widget(PesoApp(name = "app"))
+                inicio.current = "app"
+
+    @classmethod
+    def cerrar_sin_camp_pop(self):
+        MainApp.cerrar_dialog(self.sin_camp_pop)
+
     def buscador_dir(self):
-        '''Usa el buscador de dir. de plyer'''
+        '''Usa el buscador de dir. de tkinter'''
         try:
-            dir = filechooser.choose_dir()[0]
+            dir = filedialog.askdirectory()
             self.dir_xlsx = dir
         except:
             raise Exception("Falla en el filechooser.")
         
         print("Seleccionada carpeta: ", dir)
+
 
 class MensErr(BoxLayout):
     mens_err = StringProperty()
@@ -264,19 +292,9 @@ class MensErr(BoxLayout):
 
 class Dialog(BoxLayout):
     mensaje = StringProperty()
-    si = StringProperty()
-    no = StringProperty()
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.mensaje = kwargs["mensaje"]
-        self.si = kwargs["si"]
-        self.no = kwargs["no"]
-    
-    def ruta_sqlite(self):
-        filec = filechooser.choose_dir()
-        print("\n", filec, "\n")
-    def ruta_xlsx(self):
-        ...
 
 
 class Crud:
@@ -437,7 +455,7 @@ class PesoApp(Screen):
         t = threading.Thread(target=self.comando_cmd)
         t.daemon = True
         t.start()
-
+"""
     # Métodos Ventanas emergentes ####
     @classmethod
     def dialog_emerg(self, titulo:str, mns:str, si:str, no:str):
@@ -495,7 +513,8 @@ class PesoApp(Screen):
         '''Evento de cierre para el botón del aviso emergente'''
         print("cierra emerg")
         self.v_config.dismiss()
-
+        
+"""
 
 # Declaración de aplicación  #######################
 class MainApp(App):
@@ -506,8 +525,7 @@ class MainApp(App):
         inicio = ScreenManager(transition=FadeTransition())
         inicio.add_widget(PrimEjec(name = "sinconf"))
         inicio.add_widget(ConfEmerg(name = "configur"))
-        #inicio.add_widget(PesoApp(name = "app"))
-        
+
         ## lanzar aviso de config, si no hay .cfg
         if _config:
             print("#####\nintenta iniciar app\n#####")
@@ -517,7 +535,25 @@ class MainApp(App):
             print("#####\nNo detecta .cfg\n#####")
             inicio.current = "sinconf"
 
-        return inicio        
+        return inicio 
+
+    # Aviso emergente
+    @classmethod
+    def dialog_emerg(self, titulo:str, mns:str) -> Popup:
+        '''Aviso emergente. Usar .open() para lanzar ventana'''
+        print("Aviso emergente: ",mns)
+        self.dialog = Popup(title=titulo,
+            title_size=20,
+            content=Dialog(mensaje=mns),
+            size_hint=(None, None),
+            size=(300,250))
+        
+        return self.dialog
+        
+    @classmethod
+    def cerrar_dialog(self, dialog:Popup):
+        '''Cierra ventanas emergentes.'''
+        dialog.dismiss()
 
 
 if __name__ == '__main__':

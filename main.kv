@@ -268,15 +268,13 @@
         size_hint: 1, 1
     BoxLayout:
         orientation: 'horizontal'
-        padding: 10
+        padding: 20
         Button:
-            text: root.si
+            text: "Cerrar"
             size_hint: 1, 0.6
-            on_press: app.root.a_conf()
-        Button:
-            text: root.no
-            size_hint: 1, 0.6
-            on_press: root.cerrar_dialog()
+            on_press: 
+                app.cerrar_dialog()
+                app.root.current = "configur"
 
 <PrimEjec>:
     BoxLayout:
