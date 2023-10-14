@@ -23,8 +23,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 import time
 import os
 from platform import system
-from plyer import filechooser # no funciona como deseo,
-from tkinter import filedialog # uso el de tkinter por ahora
+from plyer import filechooser # para ubuntu
+from tkinter import filedialog # tkinter para windows
 import configparser
 import threading
 import re
@@ -271,16 +271,21 @@ class ConfEmerg(Screen):
     @classmethod
     def cerrar_sin_camp_pop(self):
         MainApp.cerrar_dialog(self.sin_camp_pop)
-
+    
     def buscador_dir(self):
-        '''Usa el buscador de dir. de tkinter'''
+        '''Buscador de dir. dependiente de sistema 
+        (debido a problemas con Ubuntu)'''
+        
         try:
-            dir = filedialog.askdirectory()
-            self.dir_xlsx = dir
+            if system() == "Windows":
+                dir = filedialog.askdirectory()
+                self.dir_xlsx = dir
+            elif system() == "Linux":
+                dir = filechooser.choose_dir()
+                self.dir_xlsx = dir[0]
         except:
             raise Exception("Falla en el filechooser.")
         
-        print("Seleccionada carpeta: ", dir)
 
 
 class MensErr(BoxLayout):
@@ -382,6 +387,7 @@ class PesoApp(Screen):
         self.sistem = self.config.sistema
         self.fechainput = FECHA_SIS # * el valor defoult
         self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
+        self.rutaxlsx = os.path.join(self.config.dir_xlsx, self.config.nom_xlsx)
 
 
     def guardar(self):
