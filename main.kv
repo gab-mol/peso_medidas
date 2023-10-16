@@ -190,7 +190,7 @@
         orientation: 'vertical'
         Label:
             markup: True
-            text: "[b]Elegir nombre y carpeta \npara el libro excel[/b]"
+            text: "[b]Elegir nombre y carpeta \npara nuevo libro excel[/b]"
             font_size: ((self.height + self.width)/2)/12
             size_hint: 1, .3
         BoxLayout:
@@ -261,7 +261,51 @@
                 font_size: 20
                 size_hint: 0.7, 1
                 on_press: root.configurar()
+            Button:
+                text: "Buscar \nexistente"
+                font_size: 20
+                size_hint: 0.7, 1
+                on_press: app.root.current = "cargar_arch"
             BoxLayout:
+
+<CargarArch>:
+    ruta_arch: input_ruta_arch.text
+
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            markup: True
+            text: "[b]Elegir nombre y carpeta \npara el libro excel[/b]"
+            font_size: ((self.height + self.width)/2)/12
+            size_hint: 1, 1
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: 20
+            spacing: 20
+            TextInput:
+                id: input_ruta_arch
+                text: root.ruta_arch
+                size_hint: 1, 1
+                multiline: True
+            Button:
+                size_hint: .4, 1
+                text: "Buscar"
+                font_size: 20
+                on_release: root.buscar_arch()
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: 20
+            spacing: 20
+            Button:
+                size_hint: .5, 1
+                text: "Volver"
+                font_size: 20
+                on_release: root.volver()
+            Button:
+                size_hint: .5, 1
+                text: "Confirmar"
+                font_size: 20
+                on_release: root.confirmar()
 
 <Dialog>:
     orientation: 'vertical'

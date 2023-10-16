@@ -71,6 +71,47 @@ class PrimEjec(Screen):
         inicio.add_widget(PesoApp(name = "app"))
         inicio.current = "app"
 
+
+class CargarArch(Screen):
+    '''Pantalla para buscar archivos .xlsx previos.'''
+    ruta_arch = StringProperty()
+    
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.ruta_arch = "\n    Buscar..."
+        self.conf = Confg()
+        self.habil_confirm = False
+    
+    def buscar_arch(self):
+        try:
+            self.ruta_arch = filedialog.askopenfilename()
+            if self.ruta_arch:
+                ruta_s = self.ruta_arch.split(sep="/")
+                if ruta_s[-1].split(".")[1] == "xlsx":
+                    self.nombre = ruta_s[-1].split(".")[0]
+                    del ruta_s[-1]
+                    self.dir = "/".join(ruta_s)
+                    self.habil_confirm = True
+                else:
+                    self.ruta_arch = "\nARCHIVO NO ES .xlsx"
+                    #raise Exception("Falla en el buscador de archivos.")
+        except:
+            raise Exception("Falla en el buscador de archivos.")
+    
+    def volver(self):
+        inicio.current = "configur"
+        
+    def confirmar(self):
+        if self.habil_confirm:
+            if self.dir and self.nombre:
+                self.conf.cfg_custom(self.dir, self.nombre)
+                time.sleep(1)
+                inicio.add_widget(PesoApp(name = "app"))
+                inicio.current = "app"
+            else:
+                self.ruta_arch = "No hay ruta completa."
+
+
 # Archivo de configuración
 class Confg:
     '''Nombres, directorios y opciones.'''
@@ -252,20 +293,16 @@ class ConfEmerg(Screen):
         self.nombre_xlsx = ""
         
         self.config = Confg()
-
     
     def configurar(self):
         '''Permite al usuario guardar nombre y directorio para el .xlsx'''
-        print("\n",self.dir_xlsx, self._dir_xlsx, self.nombre_xlsx, self._nombre_xlsx, self.dir_xlsx, self.mns_dir)
 
         if self.dir_xlsx == self.mns_dir or self.nombre_xlsx == "":
-            print("ENTRÓ if")
             global sin_camp_pop
             sin_camp_pop = MainApp.dialog_emerg("Aviso", 
                 "Complete los campos faltantes.")
             sin_camp_pop.open()
         else:
-            print("ENTRÓ else")
             nombre = Verificar.verf_nom_xlsx(self.nombre_xlsx)
             if nombre:
                 self.config.cfg_custom(self.dir_xlsx, nombre)
@@ -389,7 +426,6 @@ class PesoApp(Screen):
         self.salida_datos = Crud(self.config.dir_xlsx, self.config.nom_xlsx)
         self.rutaxlsx = os.path.join(self.config.dir_xlsx, self.config.nom_xlsx)
 
-
     def guardar(self):
         '''Guardar registro de medidas en .db y .xlsx a la vez.'''
         datos = [self.peso.text, self.medsomx.text, self.medsomn.text, 
@@ -462,6 +498,8 @@ class PesoApp(Screen):
         t.daemon = True
         t.start()
 
+    def configurar(self):
+        inicio.current = "configur"
 
 # Declaración de aplicación  #######################
 class MainApp(App):
@@ -472,6 +510,7 @@ class MainApp(App):
         inicio = ScreenManager(transition=FadeTransition())
         inicio.add_widget(PrimEjec(name = "sinconf"))
         inicio.add_widget(ConfEmerg(name = "configur"))
+        inicio.add_widget(CargarArch(name = "cargar_arch"))
 
         ## lanzar aviso de config, si no hay .cfg
         if _config:
