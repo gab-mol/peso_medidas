@@ -48,6 +48,7 @@
                     text: root.fechainput
                     font_size: ((self.height + self.width)/2)/4
                     multiline: False
+                    write_tab: False
                 BoxLayout:
                     size_hint: .08, 1 
             BoxLayout:
@@ -68,6 +69,7 @@
                     font_size: ((self.height + self.width)/2)/14
                     multinline: True
                     text: root.rutaxlsx
+                    write_tab: False
                 BoxLayout:
                     size_hint: .01,.8
             BoxLayout:
@@ -165,6 +167,7 @@
     multiline: False
     padding: [25, (self.height-self.line_height)/2] # de stackoverflow. aparentemente es la mitad de la diferencia entre la linea de texto y el tamaño del widget..
     font_size: ((self.height + self.width)/2)/4
+    write_tab: False
 
 <MensErr>:
     BoxLayout:
