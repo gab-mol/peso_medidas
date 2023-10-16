@@ -11,19 +11,17 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
-
+from plyer import filechooser # para ubuntu
 
 # Dependencias bases de datos:
 from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
 import openpyxl
 from openpyxl.worksheet.worksheet import Worksheet
-# import xlwings as xw
 
 # Otras dependencias
 import time
 import os
 from platform import system
-from plyer import filechooser # para ubuntu
 from tkinter import filedialog # tkinter para windows
 import configparser
 import threading
@@ -38,7 +36,11 @@ NOM_DEFOULT = {
     "xlsx_pr": "prueba.xlsx",
     "bd_sqlite":"registro.db"}
 
+# Controlar ventanas emergentes
+global nom_inval_pop, sin_camp_pop 
+nom_inval_pop, sin_camp_pop = None, None
 
+# Verificar configuración previa
 def buscar_cfg():
     global _config
     if NOM_CFG in os.listdir():
@@ -48,22 +50,17 @@ def buscar_cfg():
 
 buscar_cfg()
 
+
 def hora() -> str:
     '''Para generar claves primarias.'''
     hora = time.strftime("%d/%m/%Y-%H:%M:%S", time.localtime(time.time()))
     return hora
-
 
 class PrimEjec(Screen):
     def __init__(self, **kw):
         global _config
         super().__init__(**kw)
         self.config = Confg()
-
-    # def ini_conf(self):
-    #     print("entró a ini_conf()")
-    #     global _init_confg
-    #     _init_confg = True
 
     def confg_defoult(self):
         global inicio
@@ -227,9 +224,10 @@ class Verificar:
         de faltar.'''
         if re.search(r'[$%&"\'¡!,¿?#\][/\\]', nombre):
             print("aviso emergente en verf_nom_xlsx()")
-            self.nom_inval_pop = MainApp.dialog_emerg("Nombre inválido", 
+            global nom_inval_pop
+            nom_inval_pop = MainApp.dialog_emerg("Nombre inválido", 
                 "Introduzca nombre válido")
-            self.nom_inval_pop.open()
+            nom_inval_pop.open()
             return None
         else:
             if re.search(r'[a-zA-Z0-9].xlsx', nombre):
@@ -244,22 +242,30 @@ class ConfEmerg(Screen):
     dir_xlsx = StringProperty()
     nombre_xlsx = StringProperty()
     mns_dir = "\n      ruta carpeta ..."
+    
+    # Guardar prop. 'vacias' para verificar si entraron datos
+    _dir_xlsx, _nombre_xlsx = dir_xlsx, nombre_xlsx
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.dir_xlsx = self.mns_dir
+        self.nombre_xlsx = ""
         
         self.config = Confg()
 
-    @classmethod
+    
     def configurar(self):
         '''Permite al usuario guardar nombre y directorio para el .xlsx'''
-        print(self.nombre_xlsx)
-        if not self.nombre_xlsx or self.dir_xlsx == self.mns_dir:
-            print("aviso emergente en configurar()")
-            self.sin_camp_pop = MainApp.dialog_emerg("Aviso", 
+        print("\n",self.dir_xlsx, self._dir_xlsx, self.nombre_xlsx, self._nombre_xlsx, self.dir_xlsx, self.mns_dir)
+
+        if self.dir_xlsx == self.mns_dir or self.nombre_xlsx == "":
+            print("ENTRÓ if")
+            global sin_camp_pop
+            sin_camp_pop = MainApp.dialog_emerg("Aviso", 
                 "Complete los campos faltantes.")
-            self.sin_camp_pop.open()
+            sin_camp_pop.open()
         else:
+            print("ENTRÓ else")
             nombre = Verificar.verf_nom_xlsx(self.nombre_xlsx)
             if nombre:
                 self.config.cfg_custom(self.dir_xlsx, nombre)
@@ -267,10 +273,6 @@ class ConfEmerg(Screen):
                 time.sleep(2)
                 inicio.add_widget(PesoApp(name = "app"))
                 inicio.current = "app"
-
-    @classmethod
-    def cerrar_sin_camp_pop(self):
-        MainApp.cerrar_dialog(self.sin_camp_pop)
     
     def buscador_dir(self):
         '''Buscador de dir. dependiente de sistema 
@@ -279,13 +281,14 @@ class ConfEmerg(Screen):
         try:
             if system() == "Windows":
                 dir = filedialog.askdirectory()
-                self.dir_xlsx = dir
+                if dir: # evita error si se cierra ventana
+                    self.dir_xlsx = dir
             elif system() == "Linux":
                 dir = filechooser.choose_dir()
-                self.dir_xlsx = dir[0]
+                if dir:
+                    self.dir_xlsx = dir[0]
         except:
             raise Exception("Falla en el filechooser.")
-        
 
 
 class MensErr(BoxLayout):
@@ -340,7 +343,7 @@ class Crud:
 
             self.lib_excel.hoja.append(regis_exc)
             
-            self.lib_excel.libro.save(self.lib_excel.RUTA_XLSX)
+            self.lib_excel.libro.save(self.lib_excel.ruta_xlsx)
         except:
             raise Exception("Excel: Error de guardado")
     def baja():
@@ -350,10 +353,7 @@ class Crud:
         ...
 
 
-
-
 # Eventos bontones y declaración de app ###############################
-
 Config.set('graphics', 'width', 700)
 Config.set('graphics', 'height', 350)
 
@@ -461,66 +461,7 @@ class PesoApp(Screen):
         t = threading.Thread(target=self.comando_cmd)
         t.daemon = True
         t.start()
-"""
-    # Métodos Ventanas emergentes ####
-    @classmethod
-    def dialog_emerg(self, titulo:str, mns:str, si:str, no:str):
-        '''Dialogo emergente.'''
-        print(mns)
-        self.dialog = Popup(title=titulo,
-            title_size=20,
-            content=Dialog(mensaje=mns, si=si, no=no),
-            size_hint=(None, None),
-            size=(300,250))
-        
-        self.dialog.open()
-        
-    @classmethod
-    def cerrar_dialog(self):
-        self.dialog.dismiss()
-    
-    @classmethod
-    def a_conf(self):
-        PesoApp.configurar()
-        self.dialog.dismiss()
-        
-    @classmethod
-    def adv_emerg(self, error):
-        '''Declaración y apertura de ventana de aviso emergente.'''
-        print(error)
-        self.aviso = Popup(title="Advertencia",
-            title_size=25,
-            content=MensErr(mens_err=error),
-            size_hint=(None, None),
-            size=(300,300))
-        
-        self.aviso.open()
 
-    @classmethod
-    def cerrar_adv_emerg(self):
-        '''Evento de cierre para el botón del aviso emergente'''
-        print("cierra emerg")
-        self.aviso.dismiss()
-
-    @classmethod
-    def configurar(self):
-        '''Declaración y apertura de ventana de configuración.'''
-        print("Abrir ")
-        self.v_config = Popup(title="Configuración",
-            title_size=25,
-            content=ConfEmerg(),
-            size_hint=(None, None),
-            size=(300,300))
-        
-        self.v_config.open()
-
-    @classmethod
-    def cerrar_configurar(self):
-        '''Evento de cierre para el botón del aviso emergente'''
-        print("cierra emerg")
-        self.v_config.dismiss()
-        
-"""
 
 # Declaración de aplicación  #######################
 class MainApp(App):
@@ -557,10 +498,13 @@ class MainApp(App):
         return self.dialog
         
     @classmethod
-    def cerrar_dialog(self, dialog:Popup):
+    def cerrar_dialog(self): #dialog:Popup
         '''Cierra ventanas emergentes.'''
-        dialog.dismiss()
-
+        if nom_inval_pop:
+            nom_inval_pop.dismiss()
+        if sin_camp_pop:
+            sin_camp_pop.dismiss()
+        
 
 if __name__ == '__main__':
     MainApp().run()
