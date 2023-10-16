@@ -446,11 +446,11 @@ class PesoApp(Screen):
             '''Comando de apertura para el shell del os'''
             print(self.sistem)
             if self.sistem == "Windows":
-                rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
+                rut_compl = os.path.join(self.rutaxlsx)
                 print(rut_compl)
                 os.system(f'cmd /k start excel.exe {rut_compl}')
             elif self.sistem == "Linux":
-                rut_compl = os.path.join(self.rutaxlsx, self.nom_xlsx)
+                rut_compl = os.path.join(self.rutaxlsx)
                 print(rut_compl)
                 os.system(f'libreoffice {rut_compl}')            
             else:
