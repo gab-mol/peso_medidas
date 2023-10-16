@@ -7,9 +7,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.popup import Popup
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.config import Config
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.label import Label
-from kivy.uix.button import Button
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 from plyer import filechooser # para ubuntu
 
@@ -279,6 +276,7 @@ class Verificar:
     def cerr_aviso_xlsx(self):
         MainApp.cerrar_dialog(self.nom_inval_pop)
 
+
 class ConfEmerg(Screen):
     dir_xlsx = StringProperty()
     nombre_xlsx = StringProperty()
@@ -326,6 +324,13 @@ class ConfEmerg(Screen):
                     self.dir_xlsx = dir[0]
         except:
             raise Exception("Falla en el filechooser.")
+        
+    def volver(self):
+        '''Si ya existe configuración vuelve a app, de lo contrario a configuración.'''
+        if _config:
+            inicio.current = "app"
+        else:
+            inicio.current = "sinconf"
 
 
 class MensErr(BoxLayout):
@@ -383,11 +388,12 @@ class Crud:
             self.lib_excel.libro.save(self.lib_excel.ruta_xlsx)
         except:
             raise Exception("Excel: Error de guardado")
-    def baja():
-        ...
+        
+    def baja(self):
+        print(NotImplemented)
 
-    def modificacion():
-        ...
+    def modificacion(self):
+        print(NotImplemented)
 
 
 # Eventos bontones y declaración de app ###############################
@@ -467,17 +473,6 @@ class PesoApp(Screen):
             errores = '\n                 -> '.join(errores)
             PesoApp.adv_emerg(error=f"Valor/es no válido/s:\n                 -> {errores}")
 
-    def mas(self):
-        print("Próximamente...")
-
-        # Pruebas eventos (no relacionado a funcionalidad de mas())
-        '''print("Modificando ruta")
-        ruta_usr = filechooser.open_file(
-            title="Elegir ruta a archivo xlsx a crear..."
-            )[0]
-        self.segpeso_cfg.guardar_ruta(ruta_usr)
-        print("Ruta guardada en .cgf = ", ruta_usr)'''
-    
     def comando_cmd(self):
             '''Comando de apertura para el shell del os'''
             print(self.sistem)

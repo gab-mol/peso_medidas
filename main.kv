@@ -81,17 +81,13 @@
                     font_size: ((self.height + self.width)/2)/5
                     on_press: root.guardar()
                 Button:
+                    text: "Abrir\n xlsx"
+                    font_size: ((self.height + self.width)/2)/5
+                    on_press: root.abrir_xlsx()                
+                Button:
                     text: "Configurar"
                     font_size: ((self.height + self.width)/2)/5
                     on_press: root.configurar()
-                Button:
-                    text: "Abrir\n xlsx"
-                    font_size: ((self.height + self.width)/2)/5
-                    on_press: root.abrir_xlsx()
-                Button:
-                    text: "   Otras\nopciones"
-                    font_size: ((self.height + self.width)/2)/5
-                    on_press: root.mas()
 
         GridLayout:
             cols: 2
@@ -255,7 +251,7 @@
                 text: "Volver"
                 font_size: 20
                 size_hint: 0.7, 1
-                on_press: app.root.current = "sinconf"
+                on_press: root.volver()
             Button:
                 text: "Guardar"
                 font_size: 20
