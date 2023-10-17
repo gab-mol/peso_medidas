@@ -13,7 +13,7 @@ from plyer import filechooser # para ubuntu
 # Dependencias bases de datos:
 from peewee import  SqliteDatabase, Model, DateField, FloatField, CharField, CompositeKey
 import openpyxl
-from openpyxl.worksheet.worksheet import Worksheet
+#from openpyxl.worksheet.worksheet import Worksheet
 
 # Otras dependencias
 import time
@@ -200,6 +200,7 @@ except:
 class LibroExcel:
     '''Conexión con archivo excel'''
     def __init__(self, dir_xlsx:str, nom_xlsx:str):
+        print(dir_xlsx,nom_xlsx)
         self.ruta_xlsx= os.path.join(dir_xlsx, nom_xlsx)
         dir_cont = os.listdir(dir_xlsx)
         
@@ -220,7 +221,9 @@ class LibroExcel:
             print("Cargando excel... : ", "\n\t", self.ruta_xlsx,"\n")
             self.libro = openpyxl.load_workbook(self.ruta_xlsx)
 
-        self.hoja = self.libro["Tabla_medidas"]
+        # Se toma por defecto la primera hoja
+        hojas = self.libro.sheetnames
+        self.hoja = self.libro[hojas[0]]
     
     def ult_fila(self, hoja):
         for i in range(1, hoja.max_column + 1): 
